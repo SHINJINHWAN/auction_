@@ -1,0 +1,78 @@
+.auction-new-form {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.auction-new-form h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auction-new-form div {
+  margin-bottom: 16px;
+}
+
+.auction-new-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.auction-new-form input[type="text"],
+.auction-new-form input[type="number"],
+.auction-new-form input[type="date"],
+.auction-new-form input[type="time"],
+.auction-new-form input[type="file"],
+.auction-new-form textarea,
+.auction-new-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.auction-new-form textarea {
+  resize: vertical;
+}
+
+.auction-new-form input[type="checkbox"] {
+  transform: scale(1.2);
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.auction-new-form img {
+  margin-top: 8px;
+  border-radius: 8px;
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.auction-new-form button[type="submit"] {
+  display: block;
+  width: 100%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.auction-new-form button[type="submit"]:hover {
+  background-color: #0056b3;
+}

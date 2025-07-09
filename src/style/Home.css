@@ -1,0 +1,237 @@
+body {
+  background: #f5f6fa;
+}
+
+.auction-main-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-bottom: 50px;
+}
+
+/* --- 네비 --- */
+.auction-nav {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px 10px;
+  background: #fff;
+  border-bottom: 1.5px solid #ececec;
+}
+.auction-logo {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #222;
+  letter-spacing: 1.5px;
+  margin-right: 30px;
+}
+.auction-nav-menu {
+  display: flex;
+  flex: 1;
+  list-style: none;
+  gap: 26px;
+  font-size: 1.07rem;
+  color: #444;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+}
+.auction-nav-menu li {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.auction-nav-menu li:hover {
+  color: #ffbb00;
+}
+.auction-login-btn {
+  background: #ffef70;
+  color: #484200;
+  font-weight: 700;
+  font-size: 1.07rem;
+  padding: 7px 20px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 7px #ffe585bb;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.auction-login-btn:hover {
+  background: #ffe047;
+}
+
+/* --- 배너 --- */
+.auction-banner-area {
+  margin: 18px 0 22px;
+  display: flex;
+  gap: 12px;
+}
+.auction-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffe16a;
+  border-radius: 18px;
+  min-height: 120px;
+  width: 100%;
+  padding: 22px 36px;
+  box-shadow: 0 4px 24px #ffe39999;
+  position: relative;
+  overflow: hidden;
+}
+.auction-banner-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #b47a00;
+  margin-bottom: 9px;
+}
+.auction-banner-desc {
+  color: #555;
+  font-size: 1.07rem;
+}
+.auction-banner-img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  position: absolute;
+  right: 42px;
+  top: 25px;
+  opacity: 0.85;
+}
+
+/* --- 카테고리 --- */
+.auction-category-area {
+  display: flex;
+  justify-content: center;
+  gap: 33px;
+  background: #fff;
+  border-radius: 11px;
+  padding: 22px 0 10px;
+  margin-bottom: 34px;
+}
+.auction-category-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1.08rem;
+  cursor: pointer;
+  transition: color 0.13s;
+}
+.auction-category-box:hover {
+  color: #fba800;
+}
+.auction-category-icon {
+  font-size: 2.05rem;
+  margin-bottom: 5px;
+}
+
+/* --- 경매 게시판 --- */
+.auction-content-main {
+  background: #fff;
+  border-radius: 18px;
+  margin-top: 18px;
+  box-shadow: 0 3px 24px #e5e5e5cc;
+  padding: 20px 16px 38px;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #eee;
+  padding: 0 8px 14px;
+  margin-bottom: 16px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #222;
+  margin: 0;
+}
+.current-time {
+  font-size: 1rem;
+  color: #969696;
+  text-align: right;
+}
+.btn-new-auction {
+  background: #fee13c;
+  color: #343204;
+  font-weight: 700;
+  padding: 9px 25px;
+  margin: 18px 0 12px 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 7px #ffeeaa;
+  transition: background 0.14s;
+}
+.btn-new-auction:hover {
+  background: #ffdd20;
+}
+.auction-list-table {
+  width: 99%;
+  margin: 0 auto;
+  border-collapse: separate;
+  border-spacing: 0 0.2rem;
+  background: #fff;
+  font-size: 1.07rem;
+}
+.auction-list-table thead th {
+  background: #fcf7e8;
+  color: #8a651d;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 13px 6px;
+  border-bottom: 2px solid #ececec;
+}
+.auction-list-table tbody tr {
+  border-bottom: 1px solid #f1f1f1;
+  transition: background 0.14s;
+}
+.auction-list-table tbody tr:hover {
+  background: #fefae6;
+}
+.auction-list-table td {
+  padding: 9px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+.auction-thumbnail {
+  border-radius: 7px;
+  border: 1.5px solid #f0e3ad;
+  background: #faf9f4;
+  width: 90px; height: 60px;
+  object-fit: cover;
+}
+.auction-title-link {
+  color: #157efb;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-decoration: none;
+  transition: color 0.16s;
+}
+.auction-title-link:hover { color: #fa9800; text-decoration: underline; }
+.bid-btn {
+  background: #fbeea2;
+  color: #ad6f00;
+  border: none;
+  border-radius: 7px;
+  padding: 6px 15px;
+  font-weight: 700;
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.bid-btn:hover {
+  background: #fcd55b;
+  color: #b26a00;
+}
+.auction-ended {
+  color: #f0553d;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+@media (max-width: 900px) {
+  .auction-main-container { max-width: 99vw; }
+  .auction-banner { flex-direction: column; min-height: 140px; padding: 15px 10px; }
+  .auction-banner-img { right: 8px; width: 66px; top: 50px; }
+  .auction-category-area { flex-wrap: wrap; gap: 16px; }
+}
