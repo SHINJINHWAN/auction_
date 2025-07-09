@@ -12,10 +12,12 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
+    private final NotificationService notificationService;
 
-    public AuctionService(AuctionRepository auctionRepository, BidRepository bidRepository) {
+    public AuctionService(AuctionRepository auctionRepository, BidRepository bidRepository, NotificationService notificationService) {
         this.auctionRepository = auctionRepository;
         this.bidRepository = bidRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -47,6 +49,29 @@ public class AuctionService {
             dto.setHighestBid(Math.max(highestBid, dto.getStartPrice()));
         }
         return list;
+    }
+
+    /**
+     * 경매 종료 체크 및 자동 종료 처리
+     */
+    public void checkAndCloseAuction(AuctionDto auction) {
+        if (auction != null && !auction.isClosed() && java.time.LocalDateTime.now().isAfter(auction.getEndTime())) {
+            // 최고가 입찰자 조회
+            java.util.List<com.auction.dto.BidDto> bids = bidRepository.findByAuctionId(auction.getId());
+            if (!bids.isEmpty()) {
+                com.auction.dto.BidDto highest = bids.get(0); // 이미 최고가순 정렬
+                auction.setWinner(highest.getBidder());
+            }
+            auction.setClosed(true);
+            auctionRepository.updateClosedAndWinner(auction.getId(), true, auction.getWinner());
+            
+            // 경매 마감 알림 전송 (모든 입찰자에게)
+            notificationService.sendAuctionEndNotification(
+                auction.getId(), 
+                auction.getTitle(), 
+                auction.getWinner()
+            );
+        }
     }
 
     // ✅ 향후 필요 시: updateAuction, deleteAuction 등 확장 가능

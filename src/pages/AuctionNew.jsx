@@ -5,11 +5,10 @@ import '../style/AuctionNew.css';
 function AuctionNew() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('가전');
-  const [brand, setBrand] = useState('');
+  const [brand, setBrand] = useState('기타');
   const [status, setStatus] = useState('신품');
   const [desc, setDesc] = useState('');
-  const [images, setImages] = useState([null, null, null]);
-  const [imageUrls, setImageUrls] = useState(['', '', '']);
+  const [imageUrl, setImageUrl] = useState('');
 
   const [startPrice, setStartPrice] = useState('');
   const [buyNow, setBuyNow] = useState('');
@@ -27,31 +26,28 @@ function AuctionNew() {
 
   const navigate = useNavigate();
 
-  const handleImageChange = (idx, file) => {
-    const newImages = [...images];
-    newImages[idx] = file;
-    setImages(newImages);
-
-    const urls = [...imageUrls];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        urls[idx] = reader.result;
-        setImageUrls(urls);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      urls[idx] = '';
-      setImageUrls(urls);
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('http://localhost:8080/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('이미지 업로드 실패');
+      const url = await res.text();
+      setImageUrl(url);
+    } catch (err) {
+      alert('이미지 업로드 실패: ' + err.message);
     }
   };
 
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // 이미지 1장 이상 첨부 필수
-  if (!images[0] || images[0].size === 0) {
-    alert('이미지는 최소 1장 첨부해야 합니다.');
+  if (!imageUrl) {
+    alert('이미지를 먼저 업로드하세요.');
     return;
   }
 
@@ -76,43 +72,46 @@ const handleSubmit = async (e) => {
     return;
   }
 
-  const formData = new FormData();
-  formData.append('title', title);
-  formData.append('category', category);
-  formData.append('status', status);
-  formData.append('brand', brand);
-  formData.append('description', desc);
-  formData.append('startPrice', startPrice);
-  formData.append('buyNowPrice', buyNow);
-  formData.append('bidUnit', bidUnit);
-  formData.append('startTime', `${startDate} ${startTime}:00`); // 'yyyy-MM-dd HH:mm:ss'
-  formData.append('endTime', `${endDate} ${endTime}:00`);
-  formData.append('minBidCount', minBid);
-  formData.append('autoExtend', autoExt ? '1' : '0');
-  formData.append('shippingFee', shipping);
-  formData.append('shippingType', shippingType);
-  formData.append('location', location);
+  const auctionData = {
+    title,
+    category,
+    status,
+    brand,
+    description: desc,
+    startPrice: parseInt(startPrice),
+    buyNowPrice: buyNow ? parseInt(buyNow) : null,
+    bidUnit: parseInt(bidUnit),
+    startTime: `${startDate} ${startTime}:00`,
+    endTime: `${endDate} ${endTime}:00`,
+    minBidCount: parseInt(minBid),
+    autoExtend: autoExt,
+    shippingFee: shipping,
+    shippingType,
+    location,
+    imageUrl1: imageUrl // DTO의 @JsonProperty("imageUrl1")와 일치
+  };
 
-  if (images[0] && images[0].size > 0) formData.append('image1', images[0]);
-  if (images[1] && images[1].size > 0) formData.append('image2', images[1]);
-  if (images[2] && images[2].size > 0) formData.append('image3', images[2]);
-  console.log(images[0], images[1], images[2])
   try {
+    console.log('📤 전송할 데이터:', auctionData);
     const res = await fetch('http://localhost:8080/api/auctions', {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(auctionData),
     });
-
+    
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || '업로드 실패');
+      const errorText = await res.text();
+      console.error('❌ 서버 응답:', res.status, errorText);
+      throw new Error(`서버 오류 (${res.status}): ${errorText}`);
     }
-
+    
+    const result = await res.text();
+    console.log('✅ 성공 응답:', result);
     alert('경매가 등록되었습니다');
     navigate('/');
   } catch (err) {
-    console.error('❌ 등록 실패:', err);
-    alert("에러 발생: " + err.message);
+    console.error('❌ 오류 발생:', err);
+    alert('에러 발생: ' + err.message);
   }
 };
 
@@ -146,8 +145,7 @@ const handleSubmit = async (e) => {
       <div>
         <label>브랜드</label>
         <select value={brand} onChange={e => setBrand(e.target.value)}>
-          <option value="">선택</option>
-          {BRAND_LIST.map(b => <option key={b}>{b}</option>)}
+          {BRAND_LIST.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
       </div>
 
@@ -157,13 +155,9 @@ const handleSubmit = async (e) => {
       </div>
 
       <div>
-        <label>이미지 업로드 (최대 3장)</label>
-        {[0, 1, 2].map(i => (
-          <div key={i}>
-            <input type="file" accept="image/*" onChange={e => handleImageChange(i, e.target.files[0])} />
-            {imageUrls[i] && <img src={imageUrls[i]} alt={`이미지 ${i + 1}`} width="100" />}
-          </div>
-        ))}
+        <label>이미지 업로드 (1장 필수)</label>
+        <input type="file" accept="image/*" onChange={e => handleImageUpload(e.target.files[0])} />
+        {imageUrl && <img src={`http://localhost:8080${imageUrl}`} alt="업로드 미리보기" width="100" />}
       </div>
 
       <div>

@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import NotificationBell from '../components/NotificationBell';
+import ChatRoom from '../components/ChatRoom';
+import PrivateMessage from '../components/PrivateMessage';
 import '../style/Home.css';
 
 // 카테고리 리스트 및 상태, 정렬 옵션
@@ -12,10 +15,13 @@ const SORT_LIST = [
   { key: "ending", label: "마감임박순" },
   { key: "lowest", label: "최저가순" },
   { key: "buyNow", label: "즉시구매가순" },
+  { key: "comments", label: "댓글많은순" },
+  { key: "popular", label: "인기순(입찰많은순)" },
 ];
 
 function Home() {
   const [auctions, setAuctions] = useState([]);
+  const [commentCounts, setCommentCounts] = useState({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [category, setCategory] = useState('전체');
   const [status, setStatus] = useState('전체');
@@ -23,6 +29,10 @@ function Home() {
   const [showOngoing, setShowOngoing] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [showChat, setShowChat] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [showMyBids, setShowMyBids] = useState(false);
+  const myUserId = 'user1'; // 실제 로그인 사용자로 교체 필요
 
   const PAGE_SIZE = 10;
   const location = useLocation();
@@ -38,7 +48,23 @@ function Home() {
   useEffect(() => {
     fetch("http://localhost:8080/api/auctions")
       .then(res => res.json())
-      .then(data => setAuctions(Array.isArray(data) ? data : []))
+      .then(data => {
+        const auctionData = Array.isArray(data) ? data : [];
+        setAuctions(auctionData);
+        
+        // 각 경매별 댓글 수 조회
+        auctionData.forEach(auction => {
+          fetch(`http://localhost:8080/api/comments/auction/${auction.id}/count`)
+            .then(res => res.json())
+            .then(count => {
+              setCommentCounts(prev => ({
+                ...prev,
+                [auction.id]: count
+              }));
+            })
+            .catch(err => console.error(`댓글 수 조회 실패 (경매 ${auction.id}):`, err));
+        });
+      })
       .catch(err => console.error("❌ 오류 발생:", err));
   }, [location]);
 
@@ -69,7 +95,8 @@ function Home() {
   let filtered = auctions;
   if (category !== '전체') filtered = filtered.filter(a => a.category === category);
   if (status !== '전체') filtered = filtered.filter(a => a.status === status);
-  if (showOngoing) filtered = filtered.filter(a => new Date(a.endTime).getTime() > Date.now());
+  if (showOngoing) filtered = filtered.filter(a => !a.isClosed && new Date(a.endTime).getTime() > Date.now());
+  if (showMyBids) filtered = filtered.filter(a => Array.isArray(a.bidders) && a.bidders.includes(myUserId));
   if (search) {
     filtered = filtered.filter(a =>
       (a.title && a.title.includes(search)) ||
@@ -81,6 +108,8 @@ function Home() {
   if (sort === "ending") filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
   if (sort === "lowest") filtered.sort((a, b) => Math.max(a.startPrice, a.highestBid) - Math.max(b.startPrice, b.highestBid));
   if (sort === "buyNow") filtered.sort((a, b) => (a.buyNowPrice || Infinity) - (b.buyNowPrice || Infinity));
+  if (sort === "comments") filtered.sort((a, b) => (commentCounts[b.id] || 0) - (commentCounts[a.id] || 0));
+  if (sort === "popular") filtered.sort((a, b) => (Array.isArray(b.bidders) ? b.bidders.length : 0) - (Array.isArray(a.bidders) ? a.bidders.length : 0));
 
   // 페이징
   const totalPage = Math.ceil(filtered.length / PAGE_SIZE);
@@ -97,14 +126,44 @@ function Home() {
       {/* 네비 */}
       <nav className="auction-nav">
         <span className="auction-logo">🎁 AUCTION</span>
-        <ul className="auction-nav-menu">
-          <li onClick={() => navigate("/")}>홈</li>
-          <li onClick={() => alert("이벤트/공지 개발중")}>이벤트</li>
-          <li onClick={() => alert("마이페이지 개발중")}>마이경매</li>
+        <div style={{ flex: 1 }} />
+        <ul className="auction-nav-menu" style={{ marginRight: 'auto' }}>
+          {/* 홈, FAQ, 공지사항, 이벤트, 1:1문의 메뉴 제거 */}
         </ul>
-        <button className="auction-login-btn" onClick={() => alert('로그인/회원가입 개발중')}>
-          로그인/회원가입
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => alert("이벤트/공지 개발중")}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#fba800',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            이벤트
+          </button>
+          <button
+            onClick={() => alert("마이페이지 개발중")}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            마이경매
+          </button>
+          <NotificationBell userId="user1" />
+          <button className="auction-login-btn" onClick={() => alert('로그인/회원가입 개발중')}>
+            로그인/회원가입
+          </button>
+        </div>
       </nav>
 
       {/* 배너 */}
@@ -155,7 +214,12 @@ function Home() {
           <button className="auction-tab"
             style={{ fontWeight: !showOngoing ? 'bold' : 'normal' }}
             onClick={() => { setShowOngoing(false); setPage(1); }}>마감</button>
-          <button onClick={() => navigate("/new")} className="btn-new-auction">+ 새 경매 등록</button>
+          <button
+            className="auction-tab"
+            style={{ fontWeight: showMyBids ? 'bold' : 'normal', color: showMyBids ? '#fba800' : '#333' }}
+            onClick={() => { setShowMyBids(!showMyBids); setPage(1); }}
+          >내 입찰</button>
+          <button onClick={() => navigate("/auction/new")} className="btn-new-auction">+ 새 경매 등록</button>
         </div>
 
         {/* 테이블 */}
@@ -171,29 +235,59 @@ function Home() {
               <th>즉시구매가</th>
               <th>마감</th>
               <th>남은시간</th>
+              <th>댓글</th>
               <th>입찰</th>
             </tr>
           </thead>
           <tbody>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={10}>불러올 경매가 없습니다.</td>
+                <td colSpan={11}>불러올 경매가 없습니다.</td>
               </tr>
             ) : paged.map(auction => {
               // 이미지 및 남은 시간 계산
               const imgSrc = auction.imageUrl1
-                ? `http://localhost:8080${encodeURI(auction.imageUrl1)}`
+                ? `http://localhost:8080${auction.imageUrl1}`
                 : 'https://via.placeholder.com/90x60?text=No+Image';
 
-              const now = Date.now();
+              const currentTime = Date.now();
               const end = auction.endTime ? new Date(auction.endTime).getTime() : 0;
-              const left = Math.max(0, Math.floor((end - now) / 1000));
-              const remain = left > 0
-                ? `${Math.floor(left/3600)}:${String(Math.floor((left%3600)/60)).padStart(2, '0')}:${String(left%60).padStart(2, '0')}`
-                : <span className="auction-ended">종료</span>;
+              const left = Math.max(0, Math.floor((end - currentTime) / 1000));
+              
+              // 경매 상태에 따른 표시
+              let statusDisplay;
+              let remainDisplay;
+              let isEnded = auction.isClosed || left <= 0;
+              
+              // 현재 시간과 시작 시간 비교
+              const start = auction.startTime ? new Date(auction.startTime).getTime() : 0;
+              const isStarted = start <= currentTime;
+              
+              if (auction.isClosed && auction.winner) {
+                statusDisplay = <span style={{ color: '#28a745', fontWeight: 'bold' }}>🏆 낙찰완료</span>;
+                remainDisplay = <span style={{ color: '#28a745' }}>낙찰자: {auction.winner}</span>;
+              } else if (auction.isClosed) {
+                statusDisplay = <span style={{ color: '#dc3545', fontWeight: 'bold' }}>❌ 종료</span>;
+                remainDisplay = <span style={{ color: '#dc3545' }}>입찰 없음</span>;
+              } else if (!isStarted) {
+                statusDisplay = <span style={{ color: '#17a2b8', fontWeight: 'bold' }}>⏳ 진행예정</span>;
+                const startLeft = Math.max(0, Math.floor((start - currentTime) / 1000));
+                remainDisplay = <span style={{ color: '#17a2b8' }}>
+                  {Math.floor(startLeft/3600)}:${String(Math.floor((startLeft%3600)/60)).padStart(2, '0')}:${String(startLeft%60).padStart(2, '0')} 후 시작
+                </span>;
+              } else if (left <= 0) {
+                statusDisplay = <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⏰ 마감</span>;
+                remainDisplay = <span style={{ color: '#ffc107' }}>자동종료 예정</span>;
+              } else {
+                statusDisplay = <span style={{ color: '#007bff', fontWeight: 'bold' }}>🔥 진행중</span>;
+                remainDisplay = `${Math.floor(left/3600)}:${String(Math.floor((left%3600)/60)).padStart(2, '0')}:${String(left%60).padStart(2, '0')}`;
+              }
 
               return (
-                <tr key={auction.id}>
+                <tr key={auction.id} style={{ 
+                  backgroundColor: auction.isClosed ? '#f8f9fa' : 'white',
+                  opacity: auction.isClosed ? 0.8 : 1
+                }}>
                   <td>
                     <img className="auction-thumbnail" src={imgSrc} alt="썸네일" width={90} height={60}
                       onError={e => { e.target.src = 'https://via.placeholder.com/90x60?text=No+Image'; }}
@@ -206,13 +300,75 @@ function Home() {
                   </td>
                   <td>{auction.category}</td>
                   <td>{auction.brand}</td>
-                  <td>{auction.status}</td>
-                  <td>{Math.max(auction.startPrice, auction.highestBid).toLocaleString()}원</td>
-                  <td>{auction.buyNowPrice ? auction.buyNowPrice.toLocaleString() + "원" : '-'}</td>
-                  <td>{auction.endTime ? auction.endTime.substring(0,16) : '-'}</td>
-                  <td>{remain}</td>
+                  <td>{statusDisplay}</td>
+                  <td style={{ fontWeight: 'bold', color: '#007bff' }}>
+                    {Math.max(auction.startPrice, auction.highestBid).toLocaleString()}원
+                  </td>
                   <td>
-                    <button className="bid-btn" onClick={() => navigate(`/auction/${auction.id}`)}>입찰하기</button>
+                    {auction.buyNowPrice ? (
+                      <span style={{ color: '#28a745', fontWeight: 'bold' }}>
+                        💎 {auction.buyNowPrice.toLocaleString()}원
+                      </span>
+                    ) : '-'}
+                  </td>
+                  <td>{auction.endTime ? auction.endTime.substring(0,16) : '-'}</td>
+                  <td>{remainDisplay}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span style={{ 
+                      backgroundColor: '#e9ecef', 
+                      padding: '2px 8px', 
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      color: '#495057'
+                    }}>
+                      💬 {commentCounts[auction.id] || 0}
+                    </span>
+                  </td>
+                  <td>
+                    {!isStarted ? (
+                      <button 
+                        onClick={() => navigate(`/auction/${auction.id}`)}
+                        style={{ 
+                          backgroundColor: '#17a2b8',
+                          color: 'white',
+                          border: 'none',
+                          padding: '5px 10px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        시작예정
+                      </button>
+                    ) : !isEnded ? (
+                      <button 
+                        className="bid-btn" 
+                        onClick={() => navigate(`/auction/${auction.id}`)}
+                        style={{ 
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          padding: '5px 10px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        입찰하기
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => navigate(`/auction/${auction.id}`)}
+                        style={{ 
+                          backgroundColor: '#6c757d',
+                          color: 'white',
+                          border: 'none',
+                          padding: '5px 10px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        상세보기
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -227,6 +383,24 @@ function Home() {
           <button disabled={page === totalPage || totalPage === 0} onClick={() => setPage(p => p + 1)}>다음</button>
         </div>
       </div>
+
+      {/* 채팅방 */}
+      {showChat && (
+        <ChatRoom 
+          roomId={1}
+          roomName="전체 채팅방"
+          currentUser="user1"
+          onClose={() => setShowChat(false)}
+        />
+      )}
+
+      {/* 쪽지 모달 */}
+      {showMessage && (
+        <PrivateMessage
+          currentUser="user1"
+          onClose={() => setShowMessage(false)}
+        />
+      )}
     </div>
   );
 }

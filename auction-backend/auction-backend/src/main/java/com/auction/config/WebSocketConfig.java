@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 프론트엔드가 연결할 WebSocket 엔드포인트
         registry.addEndpoint("/ws-auction")
-                .setAllowedOrigins("http://localhost:5173")
+                .setAllowedOriginPatterns("*") // 모든 오리진 허용
                 .withSockJS(); // SockJS fallback 옵션
     }
 }

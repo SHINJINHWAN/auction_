@@ -84,6 +84,8 @@ public class AuctionRepository {
                 dto.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                 dto.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
                 dto.setHighestBid(rs.getInt("highest_bid"));
+                dto.setClosed(rs.getBoolean("is_closed"));
+                dto.setWinner(rs.getString("winner"));
                 return dto;
             }, id);
         } catch (Exception e) {
@@ -119,6 +121,8 @@ public class AuctionRepository {
             dto.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
             dto.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
             dto.setHighestBid(rs.getInt("highest_bid"));
+            dto.setClosed(rs.getBoolean("is_closed"));
+            dto.setWinner(rs.getString("winner"));
             return dto;
         });
     }
@@ -159,5 +163,15 @@ public class AuctionRepository {
     public void delete(Long id) {
         String sql = "DELETE FROM auction WHERE id = ?";
         jdbcTemplate.update(sql, id);
+    }
+
+    public void updateClosedAndWinner(Long auctionId, boolean isClosed, String winner) {
+        String sql = "UPDATE auction SET is_closed=?, winner=? WHERE id=?";
+        jdbcTemplate.update(sql, isClosed ? 1 : 0, winner, auctionId);
+    }
+
+    public void updateHighestBid(Long auctionId, int highestBid) {
+        String sql = "UPDATE auction SET highest_bid=? WHERE id=?";
+        jdbcTemplate.update(sql, highestBid, auctionId);
     }
 }

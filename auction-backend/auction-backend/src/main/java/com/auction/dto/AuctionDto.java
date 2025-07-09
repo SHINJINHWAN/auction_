@@ -32,6 +32,8 @@ public class AuctionDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private int highestBid; // ⭐️ 실시간 최고 입찰가
+    private boolean isClosed;
+    private String winner;
 
     // === 기본 생성자 ===
     public AuctionDto() {}
@@ -134,4 +136,30 @@ public class AuctionDto {
 
     public int getHighestBid() { return highestBid; }
     public void setHighestBid(int highestBid) { this.highestBid = highestBid; }
+
+    public boolean isClosed() { return isClosed; }
+    public void setClosed(boolean isClosed) { this.isClosed = isClosed; }
+    public String getWinner() { return winner; }
+    public void setWinner(String winner) { this.winner = winner; }
+
+    // 경매 상태 계산 메서드
+    public String getAuctionStatus() {
+        if (isClosed) {
+            return winner != null ? "낙찰완료" : "종료";
+        }
+        
+        if (startTime == null || endTime == null) {
+            return "상태미정";
+        }
+        
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        
+        if (now.isBefore(startTime)) {
+            return "진행예정";
+        } else if (now.isAfter(endTime)) {
+            return "마감";
+        } else {
+            return "진행중";
+        }
+    }
 }

@@ -40,3 +40,25 @@
 .read-the-docs {
   color: #888;
 }
+
+.main-logo {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #fba800;
+  text-decoration: none;
+  margin-right: 32px;
+}
+
+.main-nav-link {
+  color: #333;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.main-nav-link:hover {
+  background: #fba80022;
+  color: #fba800;
+}
