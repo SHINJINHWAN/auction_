@@ -1,39 +1,71 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import NavBar from './components/NavBar';
+import Footer from './components/Footer';
+import QuickMenu from './components/QuickMenu';
 import Home from './pages/Home';
 import AuctionDetail from './pages/AuctionDetail';
 import AuctionNew from './pages/AuctionNew';
-import FAQList from './pages/FAQList';
-import NoticeList from './pages/NoticeList';
+import Event from './pages/Event';
+import EventAdmin from './pages/EventAdmin';
+import EventDetail from './pages/EventDetail';
 import EventList from './pages/EventList';
+import FAQ from './pages/FAQ';
+import FAQAdmin from './pages/FAQAdmin';
+import FAQList from './pages/FAQList';
+import InquiryAdmin from './pages/InquiryAdmin';
+import InquiryAdminDetailPage from './pages/InquiryAdminDetailPage';
+import InquiryDetail from './pages/InquiryDetail';
 import InquiryList from './pages/InquiryList';
+import InquiryMy from './pages/InquiryMy';
+import InquiryNew from './pages/InquiryNew';
+import Auction from './pages/Auction'; // 경매 전체 리스트 페이지 import 추가
+import Notice from './pages/Notice';
+import NoticeAdmin from './pages/NoticeAdmin';
+import NoticeDetail from './pages/NoticeDetail';
+import NoticeList from './pages/NoticeList';
+import CustomerService from './pages/CustomerService';
 import './App.css';
 
-export default function App() {
-  // 임시: 관리자 여부 하드코딩, 실제론 로그인/권한 연동 필요
-  const isAdmin = true;
-  const userId = 'user1';
-
+function App() {
   return (
     <Router>
-      <nav className="main-nav" style={{ display: 'flex', alignItems: 'center', gap: '32px', padding: '16px 32px', background: '#fff', borderBottom: '1px solid #eee' }}>
-        <Link to="/" className="main-logo" style={{ fontWeight: 'bold', fontSize: '1.5rem', color: '#fba800', textDecoration: 'none', marginRight: 32 }}>AUCTION</Link>
-        <div style={{ display: 'flex', gap: '24px', flex: 1 }}>
-          <Link to="/faq" className="main-nav-link">FAQ</Link>
-          <Link to="/notice" className="main-nav-link">공지사항</Link>
-          <Link to="/event" className="main-nav-link">이벤트</Link>
-          <Link to="/inquiry" className="main-nav-link">1:1문의</Link>
-        </div>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/auction/:id" element={<AuctionDetail />} />
-        <Route path="/auction/new" element={<AuctionNew />} />
-        <Route path="/faq" element={<FAQList />} />
-        <Route path="/notice" element={<NoticeList />} />
-        <Route path="/event" element={<EventList />} />
-        <Route path="/inquiry" element={<InquiryList userId={userId} isAdmin={isAdmin} />} />
-      </Routes>
+      <div className="App">
+        <Header />
+        <NavBar />
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auction" element={<Auction />} /> {/* 경매 전체 리스트 라우트 추가 */}
+            <Route path="/auction/:id" element={<AuctionDetail />} />
+            <Route path="/auction/new" element={<AuctionNew />} />
+            <Route path="/event" element={<Event />} />
+            <Route path="/event/admin" element={<EventAdmin />} />
+            <Route path="/event/:id" element={<EventDetail />} />
+            <Route path="/event/list" element={<EventList />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/faq/admin" element={<FAQAdmin />} />
+            <Route path="/faq/list" element={<FAQList />} />
+            <Route path="/inquiry/admin" element={<InquiryAdmin />} />
+            <Route path="/inquiry/admin/:id" element={<InquiryAdminDetailPage />} />
+            <Route path="/inquiry/:id" element={<InquiryDetail />} />
+            <Route path="/inquiry/list" element={<InquiryList />} />
+            <Route path="/inquiry/my" element={<InquiryMy />} />
+            <Route path="/inquiry/new" element={<InquiryNew />} />
+            <Route path="/inquiry" element={<InquiryNew />} />
+            <Route path="/notice" element={<Notice />} />
+            <Route path="/notice/admin" element={<NoticeAdmin />} />
+            <Route path="/notice/:id" element={<NoticeDetail />} />
+            <Route path="/notice/list" element={<NoticeList />} />
+            <Route path="/customer-service" element={<CustomerService />} />
+          </Routes>
+        </main>
+        <Footer />
+        <QuickMenu />
+      </div>
     </Router>
   );
 }
+
+export default App;

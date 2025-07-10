@@ -1,0 +1,91 @@
+.navigation {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.nav-item {
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  text-decoration: none;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-link:hover {
+  color: #03c75a;
+  background: rgba(3, 199, 90, 0.05);
+}
+
+.nav-link.active {
+  color: #03c75a;
+  border-bottom-color: #03c75a;
+  background: rgba(3, 199, 90, 0.05);
+}
+
+.nav-icon {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.nav-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 0 10px;
+  }
+  
+  .nav-link {
+    padding: 10px 4px;
+    font-size: 12px;
+  }
+  
+  .nav-icon {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+  
+  .nav-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-list {
+    flex-wrap: wrap;
+  }
+  
+  .nav-item {
+    flex: 1 1 50%;
+  }
+  
+  .nav-link {
+    padding: 8px 4px;
+  }
+} 

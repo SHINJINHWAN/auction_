@@ -1,11 +1,14 @@
 package com.auction.service;
 
-import com.auction.dto.FAQDto;
-import com.auction.repository.FAQRepository;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.auction.dto.FAQDto;
+import com.auction.repository.FAQRepository;
 
 @Service
 public class FAQService {
@@ -17,6 +20,13 @@ public class FAQService {
 
     public void createFAQ(FAQDto dto) {
         dto.setCreatedAt(LocalDateTime.now());
+        dto.setViews(0); // 초기 조회수 0으로 설정
+        if (dto.getStatus() == null) {
+            dto.setStatus("draft"); // 기본값은 임시저장
+        }
+        if (dto.getAuthor() == null) {
+            dto.setAuthor("관리자"); // 기본 작성자
+        }
         faqRepository.save(dto);
     }
 
@@ -24,8 +34,52 @@ public class FAQService {
         return faqRepository.findAll();
     }
 
+    public List<FAQDto> getPublishedFAQs() {
+        return faqRepository.findPublishedFAQs();
+    }
+
+    public List<FAQDto> getFAQsByCategory(String category) {
+        return faqRepository.findByCategory(category);
+    }
+
+    public List<FAQDto> getFAQsByStatus(String status) {
+        return faqRepository.findByStatus(status);
+    }
+
+    public List<FAQDto> searchFAQsByQuestion(String searchTerm) {
+        return faqRepository.findByQuestionContaining(searchTerm);
+    }
+
+    public List<FAQDto> searchFAQsByAnswer(String searchTerm) {
+        return faqRepository.findByAnswerContaining(searchTerm);
+    }
+
+    public List<FAQDto> searchFAQs(String searchTerm) {
+        // 질문과 답변 모두에서 검색
+        List<FAQDto> questionResults = faqRepository.findByQuestionContaining(searchTerm);
+        List<FAQDto> answerResults = faqRepository.findByAnswerContaining(searchTerm);
+        
+        // 중복 제거 (ID 기준)
+        Map<Long, FAQDto> uniqueResults = new HashMap<>();
+        questionResults.forEach(faq -> uniqueResults.put(faq.getId(), faq));
+        answerResults.forEach(faq -> uniqueResults.put(faq.getId(), faq));
+        
+        return uniqueResults.values().stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .toList();
+    }
+
     public FAQDto getFAQ(Long id) {
         return faqRepository.findById(id);
+    }
+
+    public FAQDto getFAQAndIncrementViews(Long id) {
+        FAQDto faq = faqRepository.findById(id);
+        if (faq != null) {
+            faqRepository.incrementViews(id);
+            faq.setViews(faq.getViews() + 1);
+        }
+        return faq;
     }
 
     public void updateFAQ(FAQDto dto) {
@@ -35,5 +89,54 @@ public class FAQService {
 
     public void deleteFAQ(Long id) {
         faqRepository.delete(id);
+    }
+
+    public void publishFAQ(Long id) {
+        FAQDto faq = faqRepository.findById(id);
+        if (faq != null) {
+            faq.setStatus("published");
+            faq.setUpdatedAt(LocalDateTime.now());
+            faqRepository.update(faq);
+        }
+    }
+
+    public void unpublishFAQ(Long id) {
+        FAQDto faq = faqRepository.findById(id);
+        if (faq != null) {
+            faq.setStatus("draft");
+            faq.setUpdatedAt(LocalDateTime.now());
+            faqRepository.update(faq);
+        }
+    }
+
+    public void toggleImportant(Long id) {
+        FAQDto faq = faqRepository.findById(id);
+        if (faq != null) {
+            faq.setImportant(!faq.isImportant());
+            faq.setUpdatedAt(LocalDateTime.now());
+            faqRepository.update(faq);
+        }
+    }
+
+    // 통계 정보 반환
+    public Map<String, Object> getFAQStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalFAQs", faqRepository.findAll().size());
+        stats.put("publishedFAQs", faqRepository.countByStatus("published"));
+        stats.put("draftFAQs", faqRepository.countByStatus("draft"));
+        stats.put("importantFAQs", faqRepository.countImportantFAQs());
+        stats.put("totalViews", faqRepository.getTotalViews());
+        
+        // 카테고리별 통계
+        Map<String, Long> categoryStats = new HashMap<>();
+        categoryStats.put("auction", faqRepository.countByCategory("auction"));
+        categoryStats.put("payment", faqRepository.countByCategory("payment"));
+        categoryStats.put("delivery", faqRepository.countByCategory("delivery"));
+        categoryStats.put("account", faqRepository.countByCategory("account"));
+        categoryStats.put("technical", faqRepository.countByCategory("technical"));
+        categoryStats.put("other", faqRepository.countByCategory("other"));
+        stats.put("categoryStats", categoryStats);
+        
+        return stats;
     }
 } 

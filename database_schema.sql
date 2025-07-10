@@ -3,8 +3,8 @@
 -- =====================================================
 
 -- 데이터베이스 생성
-CREATE DATABASE IF NOT EXISTS auction_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE auction_db;
+CREATE DATABASE IF NOT EXISTS auctiondb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE auctiondb;
 
 -- =====================================================
 -- 📋 경매 테이블 (auction)

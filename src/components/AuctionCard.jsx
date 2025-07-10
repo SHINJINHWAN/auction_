@@ -18,7 +18,7 @@ function AuctionCard({ auction }) {
   const imgSrc =
     imageUrl1 && imageUrl1.trim() !== ''
       ? `http://localhost:8080${imageUrl1}`
-      : 'https://via.placeholder.com/200x120?text=No+Image';
+      : 'https://placehold.co/200x120?text=No+Image';
 
   // 남은 시간(초) 상태
   const [remainingSeconds, setRemainingSeconds] = useState(() => {
@@ -71,7 +71,7 @@ function AuctionCard({ auction }) {
          src={
     auction.imageUrl1
       ? `http://localhost:8080${encodeURI(auction.imageUrl1)}`
-      : 'https://via.placeholder.com/200x120?text=No+Image'
+      : 'https://placehold.co/200x120?text=No+Image'
   }
         alt="썸네일"
         style={{
@@ -84,7 +84,7 @@ function AuctionCard({ auction }) {
         }}
         onError={e => {
           e.target.onerror = null;
-          e.target.src = 'https://via.placeholder.com/200x120?text=No+Image';
+          e.target.src = 'https://placehold.co/200x120?text=No+Image';
         }}
       />
       <h3 style={{ marginBottom: '10px', fontSize: '1.1rem' }}>{title}</h3>
