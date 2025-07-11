@@ -14,4 +14,5 @@ public interface AuctionService {
     AuctionDto updateAuction(Long id, AuctionDto auctionDto);
     void deleteAuction(Long id);
     AuctionDto checkAndCloseAuction(AuctionDto auctionDto);
+    List<AuctionDto> getRandomAuctions(int count);
 }

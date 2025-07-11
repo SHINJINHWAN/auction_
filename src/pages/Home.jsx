@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../style/Home.css";
+import axios from '../axiosConfig';
 
 const Home = ({ dashboardData }) => {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [randomAuctions, setRandomAuctions] = useState([]);
   
   // 현재 시간 업데이트
   useEffect(() => {
@@ -22,6 +24,16 @@ const Home = ({ dashboardData }) => {
   const filteredAuctions = selectedCategory === '전체' 
     ? (dashboardData?.auctions || [])
     : (dashboardData?.auctions || []).filter(auction => auction.category === selectedCategory);
+
+  useEffect(() => {
+    if (filteredAuctions.length === 0) {
+      axios.get('/auctions/random?count=5')
+        .then(res => setRandomAuctions(res.data))
+        .catch(() => setRandomAuctions([]));
+    } else {
+      setRandomAuctions([]);
+    }
+  }, [filteredAuctions]);
 
   // 남은 시간 계산 함수
   const calculateRemainingTime = (endAt) => {
@@ -154,13 +166,28 @@ const Home = ({ dashboardData }) => {
           
           <div className="auction-grid">
             {filteredAuctions.length > 0 ? (
-              filteredAuctions.map((auction) => (
-                <AuctionCard key={auction.id} auction={auction} />
-              ))
+              selectedCategory === '전체' ? (
+                <>
+                  {filteredAuctions.slice(0, 8).map((auction) => (
+                    <AuctionCard key={auction.id} auction={auction} />
+                  ))}
+                </>
+              ) : (
+                filteredAuctions.map((auction) => (
+                  <AuctionCard key={auction.id} auction={auction} />
+                ))
+              )
             ) : (
-              <div className="no-auctions">
-                <p>해당 카테고리의 경매가 없습니다.</p>
-              </div>
+              randomAuctions.length > 0 ? (
+                <>
+                  <div className="no-auctions">해당 카테고리 경매는 없지만, 이런 경매는 어때요?</div>
+                  {randomAuctions.map((auction) => (
+                    <AuctionCard key={auction.id} auction={auction} />
+                  ))}
+                </>
+              ) : (
+                <div className="no-auctions">경매가 없습니다.</div>
+              )
             )}
           </div>
         </div>

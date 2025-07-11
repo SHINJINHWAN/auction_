@@ -3,6 +3,7 @@ package com.auction.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -155,5 +156,12 @@ public class AuctionServiceImpl implements AuctionService {
             // 실제 DB 반영 필요시 auctionRepository.save(...) 등 추가 가능
         }
         return auctionDto;
+    }
+
+    @Override
+    public List<AuctionDto> getRandomAuctions(int count) {
+        List<AuctionDto> all = getAllAuctions();
+        Collections.shuffle(all);
+        return all.stream().limit(count).collect(Collectors.toList());
     }
 } 

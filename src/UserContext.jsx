@@ -12,7 +12,7 @@ export const UserProvider = ({ children }) => {
       const token = localStorage.getItem("jwt");
       if (token) {
         try {
-          const response = await axios.get("/api/auth/me");
+          const response = await axios.get("/auth/me");
           setUser(response.data);
         } catch (error) {
           // 401 오류나 다른 인증 오류인 경우 토큰 제거

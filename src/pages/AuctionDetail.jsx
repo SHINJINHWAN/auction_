@@ -119,7 +119,7 @@ const AuctionDetail = () => {
     }
 
     setProcessing(true);
-    fetch(`http://localhost:8080/api/bids`, {
+    fetch(`http://localhost:8080/bids`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -152,7 +152,7 @@ const AuctionDetail = () => {
 
   // 실제 즉시구매 구현
   const handleBuyNow = async () => {
-    await fetch(`/api/auctions/${auction.id}/buy-now`, {
+    await fetch(`/auctions/${auction.id}/buy-now`, {
       method: 'POST',
       credentials: 'include',
     });

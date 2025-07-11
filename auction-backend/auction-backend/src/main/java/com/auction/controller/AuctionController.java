@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auction.dto.AuctionDto;
@@ -208,6 +209,12 @@ public class AuctionController {
             logger.error("경매 조회 실패", e);
             return ResponseEntity.status(500).body(null);
         }
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<List<AuctionDto>> getRandomAuctions(@RequestParam(defaultValue = "5") int count) {
+        List<AuctionDto> randomAuctions = auctionService.getRandomAuctions(count);
+        return ResponseEntity.ok(randomAuctions);
     }
 
     @GetMapping("/{id}")
