@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import axios from '../axiosConfig';
 import '../style/Inquiry.css';
 
 const Inquiry = () => {
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,114 +18,69 @@ const Inquiry = () => {
     loadInquiries();
   }, [currentPage, filterType]);
 
-  const loadInquiries = () => {
-    // 임시 문의 데이터
-    const mockInquiries = [
-      {
-        id: 1,
-        title: "경매 입찰 관련 문의",
-        content: "경매에 입찰했는데 낙찰이 되지 않았습니다. 입찰 기록은 어디서 확인할 수 있나요?",
-        category: "auction",
-        status: "answered",
-        date: "2024-01-10",
-        answer: "입찰 기록은 마이페이지 > 입찰 내역에서 확인하실 수 있습니다. 낙찰되지 않은 경우 입찰금은 자동으로 환불됩니다.",
-        answerDate: "2024-01-11"
-      },
-      {
-        id: 2,
-        title: "배송 지연 문의",
-        content: "낙찰 후 결제를 완료했는데 배송이 시작되지 않았습니다. 언제 배송되나요?",
-        category: "delivery",
-        status: "pending",
-        date: "2024-01-09"
-      },
-      {
-        id: 3,
-        title: "환불 신청 방법",
-        content: "상품을 받았는데 설명과 다릅니다. 환불을 신청하고 싶습니다.",
-        category: "refund",
-        status: "answered",
-        date: "2024-01-08",
-        answer: "환불 신청은 마이페이지 > 주문내역에서 해당 상품을 선택하신 후 '환불신청' 버튼을 클릭하시면 됩니다. 상품 수령 후 7일 이내에 신청 가능합니다.",
-        answerDate: "2024-01-09"
-      },
-      {
-        id: 4,
-        title: "회원정보 변경",
-        content: "연락처를 변경하고 싶습니다. 어떻게 해야 하나요?",
-        category: "account",
-        status: "answered",
-        date: "2024-01-07",
-        answer: "회원정보 변경은 마이페이지 > 개인정보 수정에서 가능합니다. 본인인증 후 연락처를 변경하실 수 있습니다.",
-        answerDate: "2024-01-08"
-      },
-      {
-        id: 5,
-        title: "결제 오류",
-        content: "결제 중 오류가 발생했습니다. 결제는 되었나요?",
-        category: "payment",
-        status: "pending",
-        date: "2024-01-06"
-      },
-      {
-        id: 6,
-        title: "경매 취소 문의",
-        content: "실수로 입찰했습니다. 취소할 수 있나요?",
-        category: "auction",
-        status: "answered",
-        date: "2024-01-05",
-        answer: "입찰은 취소가 불가능합니다. 입찰 전에 신중하게 고려하신 후 참여해 주시기 바랍니다. 단, 경매 시작 전까지는 입찰을 수정하실 수 있습니다.",
-        answerDate: "2024-01-06"
-      },
-      {
-        id: 7,
-        title: "상품 품질 문의",
-        content: "받은 상품에 흠집이 있습니다. 어떻게 해야 하나요?",
-        category: "quality",
-        status: "answered",
-        date: "2024-01-04",
-        answer: "상품에 문제가 있는 경우 사진과 함께 환불 신청을 해주세요. 검토 후 적절한 조치를 취하겠습니다.",
-        answerDate: "2024-01-05"
-      },
-      {
-        id: 8,
-        title: "앱 오류 문의",
-        content: "모바일 앱에서 로그인이 안 됩니다.",
-        category: "technical",
-        status: "pending",
-        date: "2024-01-03"
+  const loadInquiries = async () => {
+    try {
+      setLoading(true);
+      
+      // 공개된 FAQ만 가져오기
+      const response = await axios.get('/api/faq/published');
+      const apiFAQs = response.data;
+      
+      // 응답이 배열인지 확인하고 안전하게 설정
+      if (Array.isArray(apiFAQs)) {
+        // 필터링 적용
+        let filteredFAQs = apiFAQs;
+        
+        if (filterType === 'auction') {
+          filteredFAQs = apiFAQs.filter(faq => faq.category === 'auction');
+        } else if (filterType === 'payment') {
+          filteredFAQs = apiFAQs.filter(faq => faq.category === 'payment');
+        } else if (filterType === 'delivery') {
+          filteredFAQs = apiFAQs.filter(faq => faq.category === 'delivery');
+        }
+
+        // 검색어 적용
+        if (searchTerm) {
+          filteredFAQs = filteredFAQs.filter(faq =>
+            faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+
+        setInquiries(filteredFAQs);
+      } else {
+        console.warn('API 응답이 배열이 아닙니다:', apiFAQs);
+        setInquiries([]);
       }
-    ];
-
-    // 필터링 적용
-    let filteredInquiries = mockInquiries;
-    
-    if (filterType === 'pending') {
-      filteredInquiries = mockInquiries.filter(inquiry => inquiry.status === 'pending');
-    } else if (filterType === 'answered') {
-      filteredInquiries = mockInquiries.filter(inquiry => inquiry.status === 'answered');
+    } catch (error) {
+      console.error('FAQ 로드 실패:', error);
+      
+      // API 실패 시 임시 데이터 사용
+      const mockFAQs = [
+        {
+          id: 1,
+          category: 'auction',
+          question: '경매에 참여하려면 어떻게 해야 하나요?',
+          answer: '경매 참여를 위해서는 먼저 회원가입과 본인인증이 필요합니다. 경매 상품을 선택하신 후 "입찰하기" 버튼을 클릭하여 원하시는 금액을 입력하시면 됩니다.'
+        },
+        {
+          id: 2,
+          category: 'payment',
+          question: '결제 방법은 어떤 것들이 있나요?',
+          answer: '신용카드, 계좌이체, 가상계좌, 간편결제(카카오페이, 네이버페이, 페이팔) 등 다양한 결제 방법을 제공합니다.'
+        },
+        {
+          id: 3,
+          category: 'delivery',
+          question: '배송은 언제 시작되나요?',
+          answer: '결제 완료 후 1-2일 내에 배송이 시작됩니다. 배송 상황은 마이페이지에서 실시간으로 확인하실 수 있습니다.'
+        }
+      ];
+      
+      setInquiries(mockFAQs);
+    } finally {
+      setLoading(false);
     }
-
-    // 검색어 적용
-    if (searchTerm) {
-      filteredInquiries = filteredInquiries.filter(inquiry =>
-        inquiry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inquiry.content.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // 최신순 정렬
-    filteredInquiries.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // 페이징 적용
-    const itemsPerPage = 10;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pagedInquiries = filteredInquiries.slice(startIndex, endIndex);
-
-    setInquiries(pagedInquiries);
-    setTotalPages(Math.ceil(filteredInquiries.length / itemsPerPage));
-    setLoading(false);
   };
 
   const handleSearch = (e) => {
@@ -161,19 +120,11 @@ const Inquiry = () => {
     return colors[category] || '#666';
   };
 
-  const getStatusLabel = (status) => {
-    return status === 'answered' ? '답변완료' : '답변대기';
-  };
-
-  const getStatusColor = (status) => {
-    return status === 'answered' ? '#27ae60' : '#f39c12';
-  };
-
   if (loading) {
     return (
       <div className="inquiry-loading">
         <div className="loading-spinner"></div>
-        <p>문의내역을 불러오는 중...</p>
+        <p>FAQ를 불러오는 중...</p>
       </div>
     );
   }
@@ -182,8 +133,8 @@ const Inquiry = () => {
     <div className="inquiry-page">
       {/* 헤더 */}
       <div className="inquiry-header">
-        <h1>1:1 문의</h1>
-        <p>궁금한 점이나 문제가 있으시면 언제든 문의해 주세요</p>
+        <h1>자주 묻는 질문</h1>
+        <p>궁금한 점들을 빠르게 찾아보세요</p>
       </div>
 
       {/* 검색 및 필터 */}
@@ -191,7 +142,7 @@ const Inquiry = () => {
         <form onSubmit={handleSearch} className="search-form">
           <input
             type="text"
-            placeholder="문의 내용 검색..."
+            placeholder="궁금한 내용을 검색해보세요..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -212,61 +163,52 @@ const Inquiry = () => {
             전체
           </button>
           <button
-            className={`filter-btn ${filterType === 'pending' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('pending')}
+            className={`filter-btn ${filterType === 'auction' ? 'active' : ''}`}
+            onClick={() => handleFilterChange('auction')}
           >
-            답변대기
+            경매
           </button>
           <button
-            className={`filter-btn ${filterType === 'answered' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('answered')}
+            className={`filter-btn ${filterType === 'payment' ? 'active' : ''}`}
+            onClick={() => handleFilterChange('payment')}
           >
-            답변완료
+            결제
+          </button>
+          <button
+            className={`filter-btn ${filterType === 'delivery' ? 'active' : ''}`}
+            onClick={() => handleFilterChange('delivery')}
+          >
+            배송
           </button>
         </div>
       </div>
 
-      {/* 문의 목록 */}
+      {/* FAQ 목록 */}
       <div className="inquiry-list">
         {inquiries.length === 0 ? (
           <div className="no-inquiries">
-            <div className="no-inquiries-icon">📞</div>
+            <div className="no-inquiries-icon">❓</div>
             <p>검색 결과가 없습니다.</p>
             <span>다른 검색어를 입력해보세요.</span>
           </div>
         ) : (
-          inquiries.map((inquiry) => (
-            <Link to={`/inquiry/${inquiry.id}`} key={inquiry.id} className="inquiry-item">
+          inquiries.map((faq) => (
+            <div key={faq.id} className="inquiry-item">
               <div className="inquiry-content">
                 <div className="inquiry-header">
                   <div className="inquiry-title">
                     <span 
                       className="category-badge" 
-                      style={{ backgroundColor: getCategoryColor(inquiry.category) }}
+                      style={{ backgroundColor: getCategoryColor(faq.category) }}
                     >
-                      {getCategoryLabel(inquiry.category)}
+                      {getCategoryLabel(faq.category)}
                     </span>
-                    <span 
-                      className="status-badge" 
-                      style={{ backgroundColor: getStatusColor(inquiry.status) }}
-                    >
-                      {getStatusLabel(inquiry.status)}
-                    </span>
-                    <h3>{inquiry.title}</h3>
-                  </div>
-                  <div className="inquiry-meta">
-                    <span className="inquiry-date">{inquiry.date}</span>
+                    <h3>{faq.question}</h3>
                   </div>
                 </div>
-                <p className="inquiry-preview">{inquiry.content.substring(0, 100)}...</p>
-                {inquiry.status === 'answered' && (
-                  <div className="answer-preview">
-                    <span className="answer-label">답변:</span>
-                    <span className="answer-text">{inquiry.answer.substring(0, 80)}...</span>
-                  </div>
-                )}
+                <p className="inquiry-preview">{faq.answer}</p>
               </div>
-            </Link>
+            </div>
           ))
         )}
       </div>
@@ -302,23 +244,18 @@ const Inquiry = () => {
         </div>
       )}
 
-      {/* 문의 작성 버튼 */}
-      <div className="inquiry-actions">
-        <Link to="/inquiry/new" className="new-inquiry-button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          새 문의 작성
-        </Link>
-      </div>
-
-      {/* 관리자 링크 */}
-      <div className="admin-link">
-        <Link to="/inquiry/admin" className="admin-button">
-          관리자 페이지
-        </Link>
-      </div>
+      {/* 문의 작성 버튼 - 로그인한 사용자만 */}
+      {user && (
+        <div className="inquiry-actions">
+          <Link to="/inquiry/new" className="new-inquiry-button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            새 문의 작성
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

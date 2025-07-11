@@ -17,7 +17,8 @@
   font-weight: 500;
 }
 .notice-admin-form input,
-.notice-admin-form textarea {
+.notice-admin-form textarea,
+.notice-admin-form select {
   width: 100%;
   padding: 8px;
   margin-bottom: 16px;
@@ -28,6 +29,20 @@
 .notice-admin-form textarea {
   min-height: 80px;
   resize: vertical;
+}
+.checkbox-group {
+  margin-bottom: 16px;
+}
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 .notice-admin-form-btns {
   display: flex;

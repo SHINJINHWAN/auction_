@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useUser } from '../UserContext';
+import axios from '../axiosConfig';
 import '../style/InquiryNew.css';
 
 const InquiryNew = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     category: '',
@@ -12,6 +15,18 @@ const InquiryNew = () => {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 로그인 체크를 useEffect로 이동
+  useEffect(() => {
+    if (!user) {
+      // navigate('/login');
+    }
+  }, [user, navigate]);
+
+  // 로그인하지 않은 경우 로딩 표시
+  if (!user) {
+    return <div className="loading">로그인 확인 중...</div>;
+  }
 
   const categories = [
     { id: 'auction', name: '경매', icon: '🔨' },
@@ -103,12 +118,19 @@ const InquiryNew = () => {
     setIsSubmitting(true);
 
     try {
-      // 실제 API 호출 대신 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 실제 API 호출
+      const inquiryData = {
+        category: formData.category,
+        title: formData.title,
+        content: formData.content
+      };
+      
+      await axios.post('/api/inquiry', inquiryData);
       
       alert('문의가 성공적으로 등록되었습니다.');
-      navigate('/inquiry');
+      navigate('/inquiry/my');
     } catch (error) {
+      console.error('문의 등록 실패:', error);
       alert('문의 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);

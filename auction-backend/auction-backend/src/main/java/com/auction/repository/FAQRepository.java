@@ -20,7 +20,7 @@ public class FAQRepository {
         String sql = "INSERT INTO faq (question, answer, category, status, is_important, views, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql, 
             dto.getQuestion(), 
-            dto.getAnswer(),
+            dto.getAnswer(), 
             dto.getCategory(),
             dto.getStatus(),
             dto.isImportant(),
@@ -47,11 +47,6 @@ public class FAQRepository {
 
     public List<FAQDto> findByQuestionContaining(String searchTerm) {
         String sql = "SELECT * FROM faq WHERE question LIKE ? ORDER BY is_important DESC, created_at DESC";
-        return jdbcTemplate.query(sql, this::mapRowToDto, "%" + searchTerm + "%");
-    }
-
-    public List<FAQDto> findByAnswerContaining(String searchTerm) {
-        String sql = "SELECT * FROM faq WHERE answer LIKE ? ORDER BY is_important DESC, created_at DESC";
         return jdbcTemplate.query(sql, this::mapRowToDto, "%" + searchTerm + "%");
     }
 

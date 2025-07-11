@@ -1,11 +1,12 @@
 package com.auction.service;
 
-import com.auction.dto.NotificationDto;
-import com.auction.repository.NotificationRepository;
+import java.util.List;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.auction.dto.NotificationDto;
+import com.auction.repository.NotificationRepository;
 
 @Service
 public class NotificationService {
@@ -19,7 +20,7 @@ public class NotificationService {
     }
 
     // 입찰 알림 (경매 등록자에게)
-    public void sendBidNotification(Long auctionId, String auctionTitle, String bidder, int bidAmount) {
+    public void sendBidNotification(Long auctionId, String auctionTitle, String bidder, Long bidAmount) {
         String message = String.format("🎯 '%s'에 %s님이 %d원으로 입찰했습니다!", auctionTitle, bidder, bidAmount);
         NotificationDto notification = new NotificationDto(auctionId, auctionTitle, "seller", "BID", message);
         

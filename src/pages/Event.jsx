@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from '../axiosConfig';
 import '../style/Event.css';
 
 const Event = () => {
@@ -14,119 +15,130 @@ const Event = () => {
     loadEvents();
   }, [currentPage, filterType]);
 
-  const loadEvents = () => {
-    // 임시 이벤트 데이터
-    const mockEvents = [
-      {
-        id: 1,
-        title: "신년 맞이 특별 이벤트",
-        subtitle: "2024년 새해를 맞이하여 특별한 혜택을 드립니다!",
-        description: "1월 한 달간 경매 수수료 50% 할인 혜택을 드립니다. 신규 회원 가입 시 추가 혜택도 함께 제공됩니다.",
-        image: "https://placehold.co/400x250/3498db/ffffff?text=신년+이벤트",
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-        status: "ongoing",
-        category: "discount",
-        participants: 1250,
-        isHot: true
-      },
-      {
-        id: 2,
-        title: "첫 경매 참여 이벤트",
-        subtitle: "처음 경매에 참여하시는 분들을 위한 특별 이벤트",
-        description: "첫 경매 참여 시 수수료 면제 및 10,000원 할인 쿠폰을 제공합니다. 경험해보세요!",
-        image: "https://placehold.co/400x250/e74c3c/ffffff?text=첫+경매+이벤트",
-        startDate: "2024-01-15",
-        endDate: "2024-02-15",
-        status: "ongoing",
-        category: "newbie",
-        participants: 890,
-        isHot: false
-      },
-      {
-        id: 3,
-        title: "겨울 시즌 특가 경매",
-        subtitle: "겨울 시즌 상품들을 특별한 가격으로 만나보세요",
-        description: "겨울 의류, 스키 용품, 겨울 스포츠 용품 등 다양한 상품을 특가로 경매합니다.",
-        image: "https://placehold.co/400x250/2ecc71/ffffff?text=겨울+특가+이벤트",
-        startDate: "2024-01-10",
-        endDate: "2024-02-10",
-        status: "ongoing",
-        category: "seasonal",
-        participants: 567,
-        isHot: false
-      },
-      {
-        id: 4,
-        title: "2023년 연말 감사 이벤트",
-        subtitle: "고객님들께 감사드리는 마음을 담아",
-        description: "2023년 한 해 동안 이용해 주신 고객님들께 감사드리는 마음을 담아 특별한 혜택을 준비했습니다.",
-        image: "https://placehold.co/400x250/f39c12/ffffff?text=연말+감사+이벤트",
-        startDate: "2023-12-20",
-        endDate: "2023-12-31",
-        status: "ended",
-        category: "thanks",
-        participants: 2340,
-        isHot: false
-      },
-      {
-        id: 5,
-        title: "블랙프라이데이 특별 이벤트",
-        subtitle: "올해 마지막 특가 기회를 놓치지 마세요!",
-        description: "블랙프라이데이 기간 동안 모든 상품에 대해 최대 70% 할인된 가격으로 경매를 진행합니다.",
-        image: "https://placehold.co/400x250/9b59b6/ffffff?text=블랙프라이데이",
-        startDate: "2023-11-24",
-        endDate: "2023-11-26",
-        status: "ended",
-        category: "discount",
-        participants: 3450,
-        isHot: false
-      },
-      {
-        id: 6,
-        title: "가을 시즌 특가 경매",
-        subtitle: "가을을 준비하는 특가 상품들",
-        description: "가을 의류, 가을 스포츠 용품, 가을 캠핑 용품 등을 특가로 경매합니다.",
-        image: "https://placehold.co/400x250/34495e/ffffff?text=가을+특가+이벤트",
-        startDate: "2023-09-01",
-        endDate: "2023-10-31",
-        status: "ended",
-        category: "seasonal",
-        participants: 1234,
-        isHot: false
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      console.log('🚀 이벤트 데이터 로드 시작');
+      
+      // 공개된 이벤트만 가져오기
+      const response = await axios.get('/api/event/published');
+      console.log('✅ 이벤트 API 응답:', response.data);
+      let apiEvents = response.data;
+      
+      // 응답이 배열인지 확인하고 안전하게 설정
+      if (!Array.isArray(apiEvents)) {
+        console.warn('⚠️ API 응답이 배열이 아닙니다:', apiEvents);
+        apiEvents = [];
       }
-    ];
+      
+      console.log('📊 받은 이벤트 개수:', apiEvents.length);
+      console.log('📋 이벤트 데이터:', apiEvents);
+      
+      // 각 이벤트의 상세 정보 확인
+      apiEvents.forEach((event, index) => {
+        console.log(`📋 이벤트 ${index + 1}:`, {
+          id: event.id,
+          title: event.title,
+          status: event.status,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          category: event.category
+        });
+      });
+      
+      // 필터링 적용
+      let filteredEvents = apiEvents;
+      
+      if (filterType === 'ongoing') {
+        // published 상태이면서 현재 날짜가 시작일과 종료일 사이에 있는 이벤트
+        filteredEvents = apiEvents.filter(event => {
+          console.log(`🔍 이벤트 "${event.title}" 상태 확인:`, event.status);
+          const now = new Date();
+          const startDate = new Date(event.startDate);
+          const endDate = new Date(event.endDate);
+          const isOngoing = event.status === 'published' && now >= startDate && now <= endDate;
+          console.log(`📅 날짜 확인 - 현재: ${now.toISOString()}, 시작: ${startDate.toISOString()}, 종료: ${endDate.toISOString()}, 진행중: ${isOngoing}`);
+          return isOngoing;
+        });
+        console.log('🔄 진행중 필터 적용 후:', filteredEvents.length, '개');
+      } else if (filterType === 'ended') {
+        // 종료된 이벤트 (종료일이 지난 이벤트)
+        filteredEvents = apiEvents.filter(event => {
+          console.log(`🔍 이벤트 "${event.title}" 상태 확인:`, event.status);
+          const now = new Date();
+          const endDate = new Date(event.endDate);
+          const isEnded = now > endDate;
+          console.log(`📅 종료 확인 - 현재: ${now.toISOString()}, 종료: ${endDate.toISOString()}, 종료됨: ${isEnded}`);
+          return isEnded;
+        });
+        console.log('🔄 종료된 필터 적용 후:', filteredEvents.length, '개');
+      }
 
-    // 필터링 적용
-    let filteredEvents = mockEvents;
-    
-    if (filterType === 'ongoing') {
-      filteredEvents = mockEvents.filter(event => event.status === 'ongoing');
-    } else if (filterType === 'ended') {
-      filteredEvents = mockEvents.filter(event => event.status === 'ended');
+      // 검색어 적용
+      if (searchTerm) {
+        filteredEvents = filteredEvents.filter(event =>
+          event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (event.subtitle && event.subtitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        console.log('🔍 검색어 필터 적용 후:', filteredEvents.length, '개');
+      }
+
+      // 최신순 정렬
+      filteredEvents.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+
+      // 페이징 적용
+      const itemsPerPage = 6;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pagedEvents = filteredEvents.slice(startIndex, endIndex);
+
+      console.log('📄 페이징 적용 후:', pagedEvents.length, '개');
+      console.log('🎯 최종 이벤트 데이터:', pagedEvents);
+
+      setEvents(pagedEvents);
+      setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
+    } catch (error) {
+      console.error('❌ 이벤트 로드 실패:', error);
+      console.error('❌ 에러 상세:', error.response?.data || error.message);
+      
+      // API 실패 시 임시 데이터 사용
+      const mockEvents = [
+        {
+          id: 1,
+          title: "신년 맞이 특별 이벤트",
+          subtitle: "2024년 새해를 맞이하여 특별한 혜택을 드립니다!",
+          description: "1월 한 달간 경매 수수료 50% 할인 혜택을 드립니다. 신규 회원 가입 시 추가 혜택도 함께 제공됩니다.",
+          image: "https://placehold.co/400x250/3498db/ffffff?text=신년+이벤트",
+          startDate: "2024-01-01",
+          endDate: "2024-01-31",
+          status: "ongoing",
+          category: "discount",
+          participants: 1250,
+          isHot: true
+        },
+        {
+          id: 2,
+          title: "첫 경매 참여 이벤트",
+          subtitle: "처음 경매에 참여하시는 분들을 위한 특별 이벤트",
+          description: "첫 경매 참여 시 수수료 면제 및 10,000원 할인 쿠폰을 제공합니다. 경험해보세요!",
+          image: "https://placehold.co/400x250/e74c3c/ffffff?text=첫+경매+이벤트",
+          startDate: "2024-01-15",
+          endDate: "2024-02-15",
+          status: "ongoing",
+          category: "newbie",
+          participants: 890,
+          isHot: false
+        }
+      ];
+      
+      console.log('🔄 임시 데이터 사용:', mockEvents);
+      setEvents(mockEvents);
+      setTotalPages(1);
+    } finally {
+      console.log('🏁 이벤트 로딩 완료');
+      setLoading(false);
     }
-
-    // 검색어 적용
-    if (searchTerm) {
-      filteredEvents = filteredEvents.filter(event =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.subtitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // 최신순 정렬
-    filteredEvents.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-
-    // 페이징 적용
-    const itemsPerPage = 6;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pagedEvents = filteredEvents.slice(startIndex, endIndex);
-
-    setEvents(pagedEvents);
-    setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
-    setLoading(false);
   };
 
   const handleSearch = (e) => {
@@ -241,7 +253,7 @@ const Event = () => {
             {events.map((event) => (
               <Link to={`/event/${event.id}`} key={event.id} className="event-card">
                 <div className="event-image">
-                  <img src={event.image} alt={event.title} />
+                  <img src={event.imageUrl || event.image || "https://placehold.co/400x250/3498db/ffffff?text=이벤트+이미지"} alt={event.title} />
                   {event.isHot && <span className="hot-badge">HOT</span>}
                   {event.status === 'ended' && <span className="ended-badge">종료</span>}
                   <span 
@@ -253,8 +265,8 @@ const Event = () => {
                 </div>
                 <div className="event-content">
                   <h3>{event.title}</h3>
-                  <p className="event-subtitle">{event.subtitle}</p>
-                  <p className="event-description">{event.description}</p>
+                  <p className="event-subtitle">{event.subtitle || ''}</p>
+                  <p className="event-description">{event.content || event.description || ''}</p>
                   <div className="event-meta">
                     <div className="event-dates">
                       <span className="date-label">기간:</span>
@@ -270,7 +282,7 @@ const Event = () => {
                     )}
                     <div className="event-participants">
                       <span className="participants-label">참여자:</span>
-                      <span className="participants-value">{event.participants.toLocaleString()}명</span>
+                      <span className="participants-value">{(event.participants || 0).toLocaleString()}명</span>
                     </div>
                   </div>
                 </div>
@@ -310,13 +322,6 @@ const Event = () => {
           </button>
         </div>
       )}
-
-      {/* 관리자 링크 */}
-      <div className="admin-link">
-        <Link to="/event/admin" className="admin-button">
-          관리자 페이지
-        </Link>
-      </div>
     </div>
   );
 };

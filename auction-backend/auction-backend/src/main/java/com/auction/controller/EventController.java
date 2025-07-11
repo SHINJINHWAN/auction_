@@ -20,7 +20,7 @@ import com.auction.service.EventService;
 
 @RestController
 @RequestMapping("/api/event")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"}, allowCredentials = "true")
 public class EventController {
     private final EventService eventService;
 
@@ -30,6 +30,49 @@ public class EventController {
 
     // ===== 일반 사용자 API =====
     
+    // 이벤트 샘플 데이터 생성
+    @PostMapping("/sample-data")
+    public ResponseEntity<String> createSampleEvents() {
+        try {
+            EventDto event1 = new EventDto();
+            event1.setTitle("신규 회원 가입 이벤트");
+            event1.setContent("신규 회원 가입 시 10,000원 할인 쿠폰을 드립니다!");
+            event1.setCategory("가입혜택");
+            event1.setStatus("published");
+            event1.setImportant(true);
+            event1.setAuthor("관리자");
+            event1.setStartDate(java.time.LocalDate.now());
+            event1.setEndDate(java.time.LocalDate.now().plusMonths(1));
+            eventService.createEvent(event1);
+
+            EventDto event2 = new EventDto();
+            event2.setTitle("첫 경매 참여 이벤트");
+            event2.setContent("첫 경매 참여 시 수수료 면제 혜택을 제공합니다.");
+            event2.setCategory("경매혜택");
+            event2.setStatus("published");
+            event2.setImportant(false);
+            event2.setAuthor("관리자");
+            event2.setStartDate(java.time.LocalDate.now());
+            event2.setEndDate(java.time.LocalDate.now().plusWeeks(2));
+            eventService.createEvent(event2);
+
+            EventDto event3 = new EventDto();
+            event3.setTitle("프리미엄 상품 경매");
+            event3.setContent("한정 수량의 프리미엄 상품들을 특별 가격으로 경매합니다.");
+            event3.setCategory("특별경매");
+            event3.setStatus("published");
+            event3.setImportant(true);
+            event3.setAuthor("관리자");
+            event3.setStartDate(java.time.LocalDate.now());
+            event3.setEndDate(java.time.LocalDate.now().plusDays(7));
+            eventService.createEvent(event3);
+
+            return ResponseEntity.ok("이벤트 샘플 데이터가 성공적으로 생성되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("이벤트 샘플 데이터 생성에 실패했습니다: " + e.getMessage());
+        }
+    }
+    
     @GetMapping("/published")
     public List<EventDto> getPublishedEvents() {
         return eventService.getPublishedEvents();
@@ -38,11 +81,6 @@ public class EventController {
     @GetMapping("/ongoing")
     public List<EventDto> getOngoingEvents() {
         return eventService.getOngoingEvents();
-    }
-
-    @GetMapping("/upcoming")
-    public List<EventDto> getUpcomingEvents() {
-        return eventService.getUpcomingEvents();
     }
 
     @GetMapping("/published/{id}")
@@ -114,11 +152,6 @@ public class EventController {
         return eventService.getEventsByStatus(status);
     }
 
-    @GetMapping("/admin/ended")
-    public List<EventDto> getEndedEvents() {
-        return eventService.getEndedEvents();
-    }
-
     // ===== 관리자 상태 변경 API =====
     
     @PutMapping("/admin/{id}/publish")
@@ -148,18 +181,6 @@ public class EventController {
             return ResponseEntity.ok("중요도가 변경되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("중요도 변경에 실패했습니다: " + e.getMessage());
-        }
-    }
-
-    // ===== 관리자 시스템 관리 API =====
-    
-    @PutMapping("/admin/update-statuses")
-    public ResponseEntity<String> updateEventStatuses() {
-        try {
-            eventService.updateEventStatuses();
-            return ResponseEntity.ok("이벤트 상태가 업데이트되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("이벤트 상태 업데이트에 실패했습니다: " + e.getMessage());
         }
     }
 

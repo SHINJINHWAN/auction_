@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from '../axiosConfig';
 import '../style/EventAdmin.css';
 
 const EventAdmin = () => {
@@ -19,79 +20,58 @@ const EventAdmin = () => {
     loadEvents();
   }, []);
 
-  const loadEvents = () => {
-    // 임시 이벤트 데이터
-    const mockEvents = [
-      {
-        id: 1,
-        title: "신년 맞이 특별 경매 이벤트",
-        description: "2024년 새해를 맞이하여 특별한 경매 이벤트를 진행합니다. 다양한 프리미엄 상품들을 특가로 만나보세요!",
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-        status: "active",
-        imageUrl: "https://placehold.co/300x200/3498db/ffffff?text=신년+이벤트",
-        participants: 1250,
-        views: 8900,
-        isFeatured: true
-      },
-      {
-        id: 2,
-        title: "봄맞이 꽃 경매 페스티벌",
-        description: "봄의 아름다운 꽃들과 함께하는 특별한 경매 이벤트입니다. 희귀한 꽃들과 화분들을 만나보세요.",
-        startDate: "2024-03-01",
-        endDate: "2024-03-31",
-        status: "upcoming",
-        imageUrl: "https://placehold.co/300x200/2ecc71/ffffff?text=봄+이벤트",
-        participants: 0,
-        views: 2340,
-        isFeatured: false
-      },
-      {
-        id: 3,
-        title: "여름 휴가 특별 경매",
-        description: "여름 휴가를 위한 다양한 상품들을 특별한 가격으로 만나보세요. 여행용품부터 휴가용 상품까지!",
-        startDate: "2024-07-01",
-        endDate: "2024-07-31",
-        status: "upcoming",
-        imageUrl: "https://placehold.co/300x200/f39c12/ffffff?text=여름+이벤트",
-        participants: 0,
-        views: 1560,
-        isFeatured: false
-      },
-      {
-        id: 4,
-        title: "가을 수확의 기쁨 경매",
-        description: "가을의 풍성한 수확을 기념하는 특별한 경매 이벤트입니다. 신선한 농산물과 가을 상품들을 만나보세요.",
-        startDate: "2024-09-01",
-        endDate: "2024-09-30",
-        status: "upcoming",
-        imageUrl: "https://placehold.co/300x200/e67e22/ffffff?text=가을+이벤트",
-        participants: 0,
-        views: 890,
-        isFeatured: false
-      },
-      {
-        id: 5,
-        title: "연말 감사 경매 이벤트",
-        description: "한 해를 마무리하며 고객 여러분께 감사하는 마음으로 준비한 특별한 경매 이벤트입니다.",
-        startDate: "2024-12-01",
-        endDate: "2024-12-31",
-        status: "upcoming",
-        imageUrl: "https://placehold.co/300x200/e74c3c/ffffff?text=연말+이벤트",
-        participants: 0,
-        views: 1230,
-        isFeatured: true
-      }
-    ];
-
-    setEvents(mockEvents);
-    setLoading(false);
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      console.log('🚀 이벤트 관리자 데이터 로드 시작');
+      
+      const response = await axios.get('/api/event/admin');
+      console.log('✅ 이벤트 관리자 API 응답:', response.data);
+      
+      setEvents(response.data);
+    } catch (error) {
+      console.error('❌ 이벤트 관리자 데이터 로드 실패:', error);
+      
+      // API 실패 시 임시 데이터 사용
+      const mockEvents = [
+        {
+          id: 1,
+          title: "신년 맞이 특별 경매 이벤트",
+          content: "2024년 새해를 맞이하여 특별한 경매 이벤트를 진행합니다. 다양한 프리미엄 상품들을 특가로 만나보세요!",
+          startDate: "2024-01-01",
+          endDate: "2024-01-31",
+          status: "published",
+          imageUrl: "https://placehold.co/300x200/3498db/ffffff?text=신년+이벤트",
+          views: 8900,
+          important: true,
+          category: "특별경매",
+          author: "관리자"
+        },
+        {
+          id: 2,
+          title: "봄맞이 꽃 경매 페스티벌",
+          content: "봄의 아름다운 꽃들과 함께하는 특별한 경매 이벤트입니다. 희귀한 꽃들과 화분들을 만나보세요.",
+          startDate: "2024-03-01",
+          endDate: "2024-03-31",
+          status: "draft",
+          imageUrl: "https://placehold.co/300x200/2ecc71/ffffff?text=봄+이벤트",
+          views: 2340,
+          important: false,
+          category: "시즌",
+          author: "관리자"
+        }
+      ];
+      
+      setEvents(mockEvents);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusLabel = (status) => {
     const labels = {
-      active: '진행중',
-      upcoming: '예정',
+      published: '발행됨',
+      draft: '임시저장',
       ended: '종료'
     };
     return labels[status] || status;
@@ -99,11 +79,23 @@ const EventAdmin = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      active: '#27ae60',
-      upcoming: '#f39c12',
+      published: '#27ae60',
+      draft: '#f39c12',
       ended: '#e74c3c'
     };
     return colors[status] || '#666';
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      promotion: '#e74c3c',
+      seasonal: '#2ecc71',
+      thanksgiving: '#f39c12',
+      holiday: '#9b59b6',
+      special: '#3498db',
+      general: '#95a5a6'
+    };
+    return colors[category] || '#95a5a6';
   };
 
   const formatDate = (dateString) => {
@@ -133,7 +125,7 @@ const EventAdmin = () => {
   // 필터링된 이벤트
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (event.content && event.content.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
     
     return matchesSearch && matchesStatus;
@@ -149,11 +141,22 @@ const EventAdmin = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedEvent) {
-      setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
-      setShowDeleteModal(false);
-      setSelectedEvent(null);
+      try {
+        console.log('🗑️ 이벤트 삭제 시작:', selectedEvent.id);
+        await axios.delete(`/api/event/admin/${selectedEvent.id}`);
+        console.log('✅ 이벤트 삭제 완료');
+        
+        // 목록 새로고침
+        await loadEvents();
+        setShowDeleteModal(false);
+        setSelectedEvent(null);
+        alert('이벤트가 성공적으로 삭제되었습니다.');
+      } catch (error) {
+        console.error('❌ 이벤트 삭제 실패:', error);
+        alert('이벤트 삭제에 실패했습니다: ' + (error.response?.data || error.message));
+      }
     }
   };
 
@@ -167,26 +170,42 @@ const EventAdmin = () => {
     setShowForm(true);
   };
 
-  const handleFormSubmit = (formData) => {
-    if (editingEvent) {
-      // 수정
-      setEvents(prev => prev.map(event => 
-        event.id === editingEvent.id 
-          ? { ...event, ...formData, id: event.id }
-          : event
-      ));
-    } else {
-      // 새 이벤트
-      const newEvent = {
-        ...formData,
-        id: Math.max(...events.map(e => e.id)) + 1,
-        participants: 0,
-        views: 0
-      };
-      setEvents(prev => [newEvent, ...prev]);
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (editingEvent) {
+        // 수정
+        console.log('✏️ 이벤트 수정 시작:', editingEvent.id);
+        const updateData = {
+          ...formData,
+          id: editingEvent.id,
+          status: formData.status || 'published'
+        };
+        
+        await axios.put('/api/event/admin', updateData);
+        console.log('✅ 이벤트 수정 완료');
+        alert('이벤트가 성공적으로 수정되었습니다.');
+      } else {
+        // 새 이벤트
+        console.log('➕ 새 이벤트 생성 시작');
+        const createData = {
+          ...formData,
+          status: formData.status || 'published',
+          author: formData.author || '관리자'
+        };
+        
+        await axios.post('/api/event/admin', createData);
+        console.log('✅ 이벤트 생성 완료');
+        alert('이벤트가 성공적으로 생성되었습니다.');
+      }
+      
+      // 목록 새로고침
+      await loadEvents();
+      setShowForm(false);
+      setEditingEvent(null);
+    } catch (error) {
+      console.error('❌ 이벤트 저장 실패:', error);
+      alert('이벤트 저장에 실패했습니다: ' + (error.response?.data || error.message));
     }
-    setShowForm(false);
-    setEditingEvent(null);
   };
 
   if (loading) {
@@ -203,16 +222,40 @@ const EventAdmin = () => {
       {/* 헤더 */}
       <div className="event-admin-header">
         <div className="header-content">
-          <h1>이벤트 관리</h1>
-          <p>경매 이벤트를 관리할 수 있습니다</p>
+          <h1>🎉 이벤트 관리</h1>
+          <p>경매 이벤트를 생성, 수정, 삭제할 수 있습니다</p>
         </div>
         <button onClick={handleNewEvent} className="new-event-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          새 이벤트
+          새 이벤트 작성
         </button>
+      </div>
+
+      {/* 통계 카드 */}
+      <div className="stats-section">
+        <div className="stat-card">
+          <div className="stat-icon">📊</div>
+          <div className="stat-number">{events.length}</div>
+          <div className="stat-label">전체 이벤트</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">✅</div>
+          <div className="stat-number">{events.filter(e => e.status === 'published').length}</div>
+          <div className="stat-label">발행됨</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">📝</div>
+          <div className="stat-number">{events.filter(e => e.status === 'draft').length}</div>
+          <div className="stat-label">임시저장</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">⭐</div>
+          <div className="stat-number">{events.filter(e => e.important).length}</div>
+          <div className="stat-label">중요 이벤트</div>
+        </div>
       </div>
 
       {/* 검색 및 필터 */}
@@ -220,15 +263,11 @@ const EventAdmin = () => {
         <div className="search-box">
           <input
             type="text"
-            placeholder="이벤트 제목 또는 설명으로 검색..."
+            placeholder="🔍 이벤트 제목으로 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
         </div>
 
         <div className="filter-options">
@@ -237,117 +276,99 @@ const EventAdmin = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="filter-select"
           >
-            <option value="all">전체 상태</option>
-            <option value="active">진행중</option>
-            <option value="upcoming">예정</option>
-            <option value="ended">종료</option>
+            <option value="all">📋 전체 상태</option>
+            <option value="published">✅ 발행됨</option>
+            <option value="draft">📝 임시저장</option>
+            <option value="ended">❌ 종료</option>
           </select>
-        </div>
-      </div>
-
-      {/* 통계 */}
-      <div className="stats-section">
-        <div className="stat-card">
-          <div className="stat-number">{events.length}</div>
-          <div className="stat-label">전체 이벤트</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{events.filter(e => e.status === 'active').length}</div>
-          <div className="stat-label">진행중</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{events.filter(e => e.status === 'upcoming').length}</div>
-          <div className="stat-label">예정</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{events.filter(e => e.isFeatured).length}</div>
-          <div className="stat-label">추천 이벤트</div>
         </div>
       </div>
 
       {/* 이벤트 목록 */}
       <div className="event-list-section">
         <div className="list-header">
-          <h2>이벤트 목록</h2>
-          <span className="result-count">총 {filteredEvents.length}개</span>
+          <h2>📋 이벤트 목록 ({filteredEvents.length}개)</h2>
         </div>
 
-        <div className="event-grid">
-          {paginatedEvents.map((event, index) => (
-            <div key={event.id} className="event-card">
-              <div className="event-image">
-                <img src={event.imageUrl} alt={event.title} />
-                {event.isFeatured && <span className="featured-badge">추천</span>}
-                <span 
-                  className="status-badge"
-                  style={{ backgroundColor: getStatusColor(event.status) }}
-                >
-                  {getStatusLabel(event.status)}
-                </span>
-              </div>
-              
-              <div className="event-content">
-                <h3 className="event-title">{event.title}</h3>
-                <p className="event-description">{event.description}</p>
-                
-                <div className="event-dates">
-                  <div className="date-item">
-                    <span className="date-label">시작일:</span>
-                    <span className="date-value">{formatDate(event.startDate)}</span>
-                  </div>
-                  <div className="date-item">
-                    <span className="date-label">종료일:</span>
-                    <span className="date-value">{formatDate(event.endDate)}</span>
-                  </div>
-                </div>
-
-                <div className="event-stats">
-                  <div className="stat-item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                      <path d="m23 21-2-2"></path>
-                      <path d="m16 16 2 2"></path>
-                    </svg>
-                    <span>{event.participants.toLocaleString()}명</span>
-                  </div>
-                  <div className="stat-item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    <span>{event.views.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="event-actions">
-                  <button 
-                    onClick={() => handleEdit(event)}
-                    className="edit-btn"
-                    title="수정"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    수정
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(event)}
-                    className="delete-btn"
-                    title="삭제"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-                    </svg>
-                    삭제
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {paginatedEvents.length === 0 ? (
+          <div className="no-events">
+            <div className="no-events-icon">📝</div>
+            <p>등록된 이벤트가 없습니다.</p>
+            <button onClick={handleNewEvent} className="create-first-btn">
+              첫 번째 이벤트 작성하기
+            </button>
+          </div>
+        ) : (
+          <div className="event-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>제목</th>
+                  <th>카테고리</th>
+                  <th>상태</th>
+                  <th>기간</th>
+                  <th>조회수</th>
+                  <th>작성자</th>
+                  <th>작성일</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td className="event-title-cell">
+                      <div className="event-title">
+                        {event.important && <span className="important-badge">⭐</span>}
+                        {event.title}
+                      </div>
+                      <div className="event-preview">{event.content?.substring(0, 50)}...</div>
+                    </td>
+                    <td>
+                      <span className="category-badge" style={{ backgroundColor: getCategoryColor(event.category) }}>
+                        {event.category || '일반'}
+                      </span>
+                    </td>
+                    <td>
+                      <span 
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(event.status) }}
+                      >
+                        {getStatusLabel(event.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="date-info">
+                        <div>시작: {formatDate(event.startDate)}</div>
+                        <div>종료: {formatDate(event.endDate)}</div>
+                      </div>
+                    </td>
+                    <td>{(event.views || 0).toLocaleString()}</td>
+                    <td>{event.author || '관리자'}</td>
+                    <td>{formatDate(event.createdAt)}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button 
+                          onClick={() => handleEdit(event)}
+                          className="edit-btn"
+                          title="수정"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(event)}
+                          className="delete-btn"
+                          title="삭제"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* 페이징 */}
         {totalPages > 1 && (
@@ -357,7 +378,7 @@ const EventAdmin = () => {
               disabled={currentPage === 1}
               className="page-btn"
             >
-              이전
+              ← 이전
             </button>
             
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -375,7 +396,7 @@ const EventAdmin = () => {
               disabled={currentPage === totalPages}
               className="page-btn"
             >
-              다음
+              다음 →
             </button>
           </div>
         )}

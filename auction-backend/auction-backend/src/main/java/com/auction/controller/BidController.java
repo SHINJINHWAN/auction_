@@ -2,79 +2,95 @@ package com.auction.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.auction.dto.AuctionDto;
 import com.auction.dto.BidDto;
-import com.auction.service.AuctionService;
 import com.auction.service.BidService;
 
 @RestController
 @RequestMapping("/api/bids")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class BidController {
-    private final BidService bidService;
-    private final AuctionService auctionService;
+    
+    @Autowired
+    private BidService bidService;
 
-    public BidController(BidService bidService, AuctionService auctionService) {
-        this.bidService = bidService;
-        this.auctionService = auctionService;
-    }
-
-    @PostMapping
-    public ResponseEntity<?> placeBid(@RequestBody BidDto bid) {
-        try {
-            // 경매 정보 조회
-            AuctionDto auction = auctionService.getAuctionById(bid.getAuctionId());
-            if (auction == null) {
-                return ResponseEntity.badRequest().body("경매를 찾을 수 없습니다.");
-            }
-
-            // 경매 종료 체크
-            auctionService.checkAndCloseAuction(auction);
-            if (auction.isClosed()) {
-                return ResponseEntity.badRequest().body("이미 종료된 경매입니다.");
-            }
-
-            // 입찰가 유효성 검사
-            int currentHighest = Math.max(auction.getStartPrice(), auction.getHighestBid());
-            if (bid.getBidAmount() <= currentHighest) {
-                return ResponseEntity.badRequest().body("입찰가는 현재 최고가보다 높아야 합니다.");
-            }
-
-            // 입찰 단위 검사 (프론트와 동일하게 구간별 적용)
-            int step;
-            if (bid.getBidAmount() < 10000) step = 1000;
-            else if (bid.getBidAmount() < 100000) step = 5000;
-            else step = 10000;
-            if (bid.getBidAmount() % step != 0) {
-                return ResponseEntity.badRequest().body("입찰가는 " + String.format("%,d", step) + "원 단위로만 가능합니다.");
-            }
-
-            bid.setBidTime(LocalDateTime.now());
-            bidService.saveBid(bid);
-            
-            return ResponseEntity.ok("입찰이 성공적으로 등록되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("입찰 처리 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/{auctionId}")
-    public ResponseEntity<List<BidDto>> getBids(@PathVariable Long auctionId) {
+    // 경매별 입찰 내역 조회
+    @GetMapping("/auction/{auctionId}")
+    public ResponseEntity<List<BidDto>> getBidsByAuction(@PathVariable Long auctionId) {
         try {
             List<BidDto> bids = bidService.getBidsByAuctionId(auctionId);
             return ResponseEntity.ok(bids);
         } catch (Exception e) {
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // 입찰 생성
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createBid(@RequestBody BidDto bidDto) {
+        try {
+            BidDto createdBid = bidService.createBid(bidDto);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "입찰이 성공적으로 제출되었습니다.",
+                "bid", createdBid
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "입찰 제출에 실패했습니다: " + e.getMessage()
+            ));
+        }
+    }
+
+    // 사용자별 입찰 내역 조회
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<BidDto>> getBidsByUser(@PathVariable Long userId) {
+        try {
+            List<BidDto> bids = bidService.getBidsByUserId(userId);
+            return ResponseEntity.ok(bids);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // 입찰 통계
+    @GetMapping("/stats/auction/{auctionId}")
+    public ResponseEntity<Map<String, Object>> getBidStats(@PathVariable Long auctionId) {
+        try {
+            Map<String, Object> stats = bidService.getBidStats(auctionId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // 테스트용 모의 입찰 데이터 생성
+    @PostMapping("/mock/{auctionId}")
+    public ResponseEntity<String> createMockBids(@PathVariable Long auctionId) {
+        try {
+            // 모의 입찰 데이터 생성
+            String[] bidders = {"김철수", "이영희", "박민수", "최지영", "정현우", "한소영"};
+            long basePrice = 1000000; // 100만원부터 시작
+            
+            for (int i = 0; i < 5; i++) {
+                BidDto mockBid = new BidDto();
+                mockBid.setAuctionId(auctionId);
+                mockBid.setBidder(bidders[i % bidders.length]);
+                mockBid.setBidAmount(basePrice + (i * 10000) + (long)(Math.random() * 5000));
+                mockBid.setBidTime(LocalDateTime.now().minusMinutes(i * 5));
+                
+                bidService.createBid(mockBid);
+            }
+            
+            return ResponseEntity.ok("모의 입찰 데이터가 생성되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("모의 데이터 생성 실패: " + e.getMessage());
         }
     }
 }

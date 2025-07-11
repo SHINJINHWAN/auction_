@@ -1,326 +1,250 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import '../style/Home.css';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "../style/Home.css";
 
-const Home = () => {
-  const [auctions, setAuctions] = useState([]);
-  const [notices, setNotices] = useState([]);
-  const [faqs, setFaqs] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+const Home = ({ dashboardData }) => {
+  const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedCategory, setSelectedCategory] = useState('전체');
+  
+  // 현재 시간 업데이트
   useEffect(() => {
-    // 임시 데이터 로드
-    loadMockData();
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const loadMockData = () => {
-    // 임시 경매 데이터
-    const mockAuctions = [
-      {
-        id: 1,
-        title: "애플 맥북 프로 16인치 M2 Pro",
-        currentPrice: 2500000,
-        startPrice: 2000000,
-        endTime: "2024-01-15T18:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 15,
-        seller: "애플전문점",
-        category: "전자제품"
-      },
-      {
-        id: 2,
-        title: "샤넬 클래식 플랩백 미니",
-        currentPrice: 850000,
-        startPrice: 800000,
-        endTime: "2024-01-14T20:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 8,
-        seller: "럭셔리백전문",
-        category: "패션잡화"
-      },
-      {
-        id: 3,
-        title: "삼성 갤럭시 S24 울트라 256GB",
-        currentPrice: 1200000,
-        startPrice: 1100000,
-        endTime: "2024-01-16T22:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 23,
-        seller: "삼성공식스토어",
-        category: "전자제품"
-      },
-      {
-        id: 4,
-        title: "로렉스 서브마리너 데이트",
-        currentPrice: 8500000,
-        startPrice: 8000000,
-        endTime: "2024-01-13T16:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 12,
-        seller: "시계전문점",
-        category: "시계"
-      },
-      {
-        id: 5,
-        title: "닌텐도 스위치 OLED + 게임팩",
-        currentPrice: 350000,
-        startPrice: 320000,
-        endTime: "2024-01-17T19:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 7,
-        seller: "게임전문점",
-        category: "게임"
-      },
-      {
-        id: 6,
-        title: "아디다스 울트라부스트 21",
-        currentPrice: 180000,
-        startPrice: 160000,
-        endTime: "2024-01-15T21:00:00",
-        image: "https://placehold.co/120x80?text=경매",
-        bidCount: 19,
-        seller: "스포츠용품점",
-        category: "스포츠용품"
-      }
-    ];
+  // 카테고리 목록
+  const categories = ['전체', '가전', '전자제품', '패션', '명품', '도서', '취미', '스포츠'];
+  
+  // 카테고리별 경매 필터링
+  const filteredAuctions = selectedCategory === '전체' 
+    ? (dashboardData?.auctions || [])
+    : (dashboardData?.auctions || []).filter(auction => auction.category === selectedCategory);
 
-    // 임시 공지사항 데이터
-    const mockNotices = [
-      {
-        id: 1,
-        title: "2024년 몬스터옥션 이용약관 개정 안내",
-        date: "2024-01-10",
-        isImportant: true
-      },
-      {
-        id: 2,
-        title: "신년 맞이 특별 이벤트 안내",
-        date: "2024-01-08",
-        isImportant: false
-      },
-      {
-        id: 3,
-        title: "시스템 점검 안내 (1월 15일)",
-        date: "2024-01-05",
-        isImportant: true
-      },
-      {
-        id: 4,
-        title: "안전거래 가이드 업데이트",
-        date: "2024-01-03",
-        isImportant: false
-      }
-    ];
-
-    // 임시 FAQ 데이터
-    const mockFaqs = [
-      {
-        id: 1,
-        question: "경매 참여는 어떻게 하나요?",
-        category: "이용방법"
-      },
-      {
-        id: 2,
-        question: "입찰 취소가 가능한가요?",
-        category: "입찰"
-      },
-      {
-        id: 3,
-        question: "배송비는 누가 부담하나요?",
-        category: "배송"
-      },
-      {
-        id: 4,
-        question: "사기 방지 시스템은 어떻게 작동하나요?",
-        category: "안전거래"
-      }
-    ];
-
-    // 임시 이벤트 데이터
-    const mockEvents = [
-      {
-        id: 1,
-        title: "신년 맞이 경매 특가 이벤트",
-        description: "1월 한 달간 특별 할인된 가격으로 경매 참여",
-        endDate: "2024-01-31",
-        image: "https://placehold.co/200x120/03c75a/ffffff?text=NewYear"
-      },
-      {
-        id: 2,
-        title: "첫 경매 참여자 50% 할인",
-        description: "처음 경매에 참여하는 분들을 위한 특별 혜택",
-        endDate: "2024-01-20",
-        image: "https://placehold.co/200x120/03c75a/ffffff?text=First"
-      }
-    ];
-
-    setAuctions(mockAuctions);
-    setNotices(mockNotices);
-    setFaqs(mockFaqs);
-    setEvents(mockEvents);
-    setLoading(false);
-  };
-
-  const formatPrice = (price) => {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  const formatTimeLeft = (endTime) => {
-    const now = new Date();
-    const end = new Date(endTime);
-    const diff = end - now;
-
-    if (diff <= 0) return "마감";
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (days > 0) return `${days}일 ${hours}시간`;
-    if (hours > 0) return `${hours}시간 ${minutes}분`;
-    return `${minutes}분`;
-  };
-
-  const getTimeStatus = (endTime) => {
-    const now = new Date();
-    const end = new Date(endTime);
+  // 남은 시간 계산 함수
+  const calculateRemainingTime = (endAt) => {
+    if (!endAt) return { hours: 0, minutes: 0, seconds: 0, isEnded: true };
+    
+    const now = new Date().getTime();
+    const end = new Date(endAt).getTime();
     const diff = end - now;
     
-    if (diff <= 0) return "ended";
-    if (diff < 1000 * 60 * 60) return "urgent"; // 1시간 이내
-    if (diff < 1000 * 60 * 60 * 24) return "ending"; // 24시간 이내
-    return "normal";
+    if (diff <= 0) {
+      return { hours: 0, minutes: 0, seconds: 0, isEnded: true };
+    }
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    return { hours, minutes, seconds, isEnded: false };
   };
 
-  if (loading) {
+  // 경매 카드 컴포넌트
+  const AuctionCard = ({ auction }) => {
+    const { hours, minutes, seconds, isEnded } = calculateRemainingTime(auction.endAt);
+    
+    // 이미지 소스 결정 로직 - Auction 페이지와 동일하게
+    const getImageSrc = () => {
+      if (!auction.imageUrl1) return "https://placehold.co/300x200?text=No+Image";
+      if (auction.imageUrl1.startsWith('/uploads/')) {
+        return `/api${auction.imageUrl1}`;
+      }
+      return auction.imageUrl1;
+    };
+    
+    const imgSrc = getImageSrc();
+    const currentPrice = Math.max(auction.startPrice, auction.highestBid || 0);
+
     return (
-      <div className="home-loading">
-        <div className="loading-spinner"></div>
-        <p>데이터를 불러오는 중...</p>
+      <div className="auction-card">
+        <div className="auction-image">
+          <img src={imgSrc} alt={auction.title} />
+          <div className="auction-category">{auction.category || '기타'}</div>
+          {isEnded && <div className="auction-ended">경매 종료</div>}
+        </div>
+        <Link to={`/auction/${auction.id}`} className="auction-content-link">
+          <div className="auction-content">
+            <h3 className="auction-title">{auction.title}</h3>
+            <div className="auction-price">
+              <span className="price-label">현재가</span>
+              <span className="price-value">{currentPrice.toLocaleString()}원</span>
+            </div>
+            <div className="auction-time">
+              <span className="time-label">남은 시간</span>
+              <span className={`time-value ${isEnded ? 'ended' : ''}`}>
+                {isEnded ? '종료됨' : `${hours}시간 ${minutes}분 ${seconds}초`}
+              </span>
+            </div>
+            <div className="auction-meta">
+              <span className="bid-count">입찰 {auction.bidCount || 0}회</span>
+              <span className="view-count">조회 {auction.viewCount || 0}회</span>
+            </div>
+            <div className="auction-link">
+              입찰하러 가기 →
+            </div>
+          </div>
+        </Link>
       </div>
     );
-  }
+  };
 
+  // 더 명확한 디버깅 로그 추가
+  console.log('🚀 Home 컴포넌트 렌더링 시작');
+  console.log('📊 전체 dashboardData:', dashboardData);
+  console.log('📋 notices 배열:', dashboardData?.notices);
+  console.log('❓ faqs 배열:', dashboardData?.faqs);
+  console.log('🎉 events 배열:', dashboardData?.events);
+  console.log('📦 auctions 배열:', dashboardData?.auctions);
+  
+  // 각 배열의 길이 확인
+  console.log('📏 notices 길이:', dashboardData?.notices?.length || 0);
+  console.log('📏 faqs 길이:', dashboardData?.faqs?.length || 0);
+  console.log('📏 events 길이:', dashboardData?.events?.length || 0);
+  console.log('📏 auctions 길이:', dashboardData?.auctions?.length || 0);
+  
+  // 조건부 렌더링 조건 확인
+  const noticesCondition = dashboardData?.notices && dashboardData.notices.length > 0;
+  const faqsCondition = dashboardData?.faqs && dashboardData.faqs.length > 0;
+  const eventsCondition = dashboardData?.events && dashboardData.events.length > 0;
+  
+  console.log('✅ 공지사항 표시 조건:', noticesCondition);
+  console.log('✅ FAQ 표시 조건:', faqsCondition);
+  console.log('✅ 이벤트 표시 조건:', eventsCondition);
+  
   return (
-    <div className="home">
-      {/* 메인 배너 */}
-      <section className="main-banner">
-        <div className="banner-content">
-          <h1>안전하고 신뢰할 수 있는<br />경매 플랫폼</h1>
-          <p>몬스터옥션에서 특별한 물품을 만나보세요</p>
-          <div className="banner-buttons">
-            <Link to="/auction" className="btn-primary">경매 보기</Link>
-            <Link to="/auction/new" className="btn-secondary">물품 등록</Link>
-          </div>
-        </div>
-        <div className="banner-stats">
-          <div className="stat-item">
-            <span className="stat-number">15,234</span>
-            <span className="stat-label">총 경매 건수</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number">98.7%</span>
-            <span className="stat-label">고객만족도</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number">0</span>
-            <span className="stat-label">사기 피해</span>
-          </div>
-        </div>
-      </section>
+    <div className="home-container">
+      {/* 현재 시간 표시 */}
+      <div className="current-time">
+        <span>현재 시간: {currentTime.toLocaleString('ko-KR')}</span>
+      </div>
 
-      {/* 실시간 경매 */}
+      {/* 상단 경매 등록/전체보기 버튼 영역 */}
+      <div className="auction-action-bar">
+        <button
+          className="auction-register-btn"
+          onClick={() => navigate("/auction-new")}
+        >
+          경매 등록하기
+        </button>
+        <Link to="/auction" className="auction-all-link">
+          전체 경매 보기
+        </Link>
+      </div>
+
+      {/* 경매 섹션 */}
       <section className="auction-section">
-        <div className="section-header">
-          <h2>🔥 실시간 인기 경매</h2>
-          <Link to="/auction" className="view-all">전체보기 →</Link>
-        </div>
-        <div className="auction-grid">
-          {auctions.map((auction) => (
-            <Link to={`/auction/${auction.id}`} key={auction.id} className="auction-item">
-              <div className="auction-image">
-                <img src={auction.image} alt={auction.title} />
-                <div className={`time-badge ${getTimeStatus(auction.endTime)}`}>
-                  {formatTimeLeft(auction.endTime)}
-                </div>
+        <div className="container">
+          <div className="section-header">
+            <h2>진행중인 경매</h2>
+            <div className="category-filter">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="auction-grid">
+            {filteredAuctions.length > 0 ? (
+              filteredAuctions.map((auction) => (
+                <AuctionCard key={auction.id} auction={auction} />
+              ))
+            ) : (
+              <div className="no-auctions">
+                <p>해당 카테고리의 경매가 없습니다.</p>
               </div>
-              <div className="auction-info">
-                <h3 className="auction-title">{auction.title}</h3>
-                <div className="auction-details">
-                  <span className="seller">{auction.seller}</span>
-                  <span className="category">{auction.category}</span>
-                </div>
-                <div className="price-info">
-                  <div className="current-price">
-                    <span className="price-label">현재가</span>
-                    <span className="price-value">{formatPrice(auction.currentPrice)}원</span>
-                  </div>
-                  <div className="bid-info">
-                    <span className="bid-count">입찰 {auction.bidCount}회</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+            )}
+          </div>
         </div>
       </section>
 
-      {/* 서비스 그리드: 공지, FAQ, 이벤트, 1:1문의 */}
-      <section className="service-grid">
-        {/* 공지사항 카드 */}
-        <div className="service-card notice-card">
-          <div className="service-icon">📢</div>
-          <div className="service-title">공지사항</div>
-          <ul className="service-preview">
-            {notices.slice(0,2).map(notice => (
-              <li key={notice.id}>
-                <span className={`notice-title${notice.isImportant ? ' important' : ''}`}>{notice.title}</span>
-                <span className="notice-date">{notice.date}</span>
-              </li>
-            ))}
-          </ul>
-          <a href="/notice" className="service-more">더보기 →</a>
-        </div>
-        {/* FAQ 카드 */}
-        <div className="service-card faq-card">
-          <div className="service-icon">❓</div>
-          <div className="service-title">자주묻는질문</div>
-          <ul className="service-preview">
-            {faqs.slice(0,2).map(faq => (
-              <li key={faq.id}>
-                <span className="faq-question">{faq.question}</span>
-                <span className="faq-category">{faq.category}</span>
-              </li>
-            ))}
-          </ul>
-          <a href="/faq" className="service-more">더보기 →</a>
-        </div>
-        {/* 이벤트 카드 */}
-        <div className="service-card event-card">
-          <div className="service-icon">🎁</div>
-          <div className="service-title">이벤트</div>
-          <ul className="service-preview">
-            {events.slice(0,1).map(event => (
-              <li key={event.id}>
-                <span className="event-title">{event.title}</span>
-                <span className="event-date">~ {event.endDate}</span>
-              </li>
-            ))}
-          </ul>
-          <a href="/event" className="service-more">더보기 →</a>
-        </div>
-        {/* 1:1문의 카드 */}
-        <div className="service-card inquiry-card">
-          <div className="service-icon">💬</div>
-          <div className="service-title">1:1 문의</div>
-          <div className="service-preview inquiry-preview">
-            <div>궁금한 점이 있으신가요?</div>
-            <div>빠르고 정확한 답변을 받아보세요</div>
+      {/* 공지사항 */}
+      {noticesCondition && (
+        <section className="notice-section">
+          <div className="container">
+            <div className="section-header">
+              <h2>공지사항</h2>
+            </div>
+            <div className="notice-list">
+              {dashboardData.notices.slice(0, 3).map((notice) => (
+                <div key={notice.id} className={`notice-item ${notice.isImportant ? 'important' : ''}`}>
+                  <div className="notice-content">
+                    <h3 className="notice-title">
+                      {notice.isImportant && <span className="important-badge">중요</span>}
+                      {notice.title}
+                    </h3>
+                    <p className="notice-excerpt">{notice.content.substring(0, 50)}...</p>
+                    <div className="notice-meta">
+                      <span className="notice-date">
+                        {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
+                      </span>
+                      <span className="notice-views">조회 {notice.views}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <a href="/inquiry/new" className="service-more btn-primary">1:1 문의하기</a>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* FAQ */}
+      {faqsCondition && (
+        <section className="faq-section">
+          <div className="container">
+            <div className="section-header">
+              <h2>자주 묻는 질문</h2>
+            </div>
+            <div className="faq-list">
+              {dashboardData.faqs.slice(0, 3).map((faq) => (
+                <div key={faq.id} className="faq-item">
+                  <div className="faq-question">
+                    <h3>{faq.question}</h3>
+                    <p className="faq-answer">{faq.answer.substring(0, 100)}...</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 이벤트 */}
+      {eventsCondition && (
+        <section className="event-section">
+          <div className="container">
+            <div className="section-header">
+              <h2>진행중인 이벤트</h2>
+            </div>
+            <div className="event-list">
+              {dashboardData.events.slice(0, 2).map((event) => (
+                <div key={event.id} className="event-item">
+                  <div className="event-content">
+                    <h3 className="event-title">
+                      {event.isImportant && <span className="important-badge">중요</span>}
+                      {event.title}
+                    </h3>
+                    <p className="event-excerpt">{event.content.substring(0, 80)}...</p>
+                    <div className="event-meta">
+                      <span className="event-date">
+                        {new Date(event.startDate).toLocaleDateString('ko-KR')} ~ {new Date(event.endDate).toLocaleDateString('ko-KR')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

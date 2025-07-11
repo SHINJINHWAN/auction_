@@ -22,10 +22,13 @@ public class FAQService {
         dto.setCreatedAt(LocalDateTime.now());
         dto.setViews(0); // 초기 조회수 0으로 설정
         if (dto.getStatus() == null) {
-            dto.setStatus("draft"); // 기본값은 임시저장
+            dto.setStatus("published"); // 기본값을 published로 변경
         }
         if (dto.getAuthor() == null) {
             dto.setAuthor("관리자"); // 기본 작성자
+        }
+        if (dto.getCategory() == null) {
+            dto.setCategory("general"); // 기본 카테고리
         }
         faqRepository.save(dto);
     }
@@ -48,25 +51,6 @@ public class FAQService {
 
     public List<FAQDto> searchFAQsByQuestion(String searchTerm) {
         return faqRepository.findByQuestionContaining(searchTerm);
-    }
-
-    public List<FAQDto> searchFAQsByAnswer(String searchTerm) {
-        return faqRepository.findByAnswerContaining(searchTerm);
-    }
-
-    public List<FAQDto> searchFAQs(String searchTerm) {
-        // 질문과 답변 모두에서 검색
-        List<FAQDto> questionResults = faqRepository.findByQuestionContaining(searchTerm);
-        List<FAQDto> answerResults = faqRepository.findByAnswerContaining(searchTerm);
-        
-        // 중복 제거 (ID 기준)
-        Map<Long, FAQDto> uniqueResults = new HashMap<>();
-        questionResults.forEach(faq -> uniqueResults.put(faq.getId(), faq));
-        answerResults.forEach(faq -> uniqueResults.put(faq.getId(), faq));
-        
-        return uniqueResults.values().stream()
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .toList();
     }
 
     public FAQDto getFAQ(Long id) {
@@ -132,9 +116,8 @@ public class FAQService {
         categoryStats.put("auction", faqRepository.countByCategory("auction"));
         categoryStats.put("payment", faqRepository.countByCategory("payment"));
         categoryStats.put("delivery", faqRepository.countByCategory("delivery"));
+        categoryStats.put("refund", faqRepository.countByCategory("refund"));
         categoryStats.put("account", faqRepository.countByCategory("account"));
-        categoryStats.put("technical", faqRepository.countByCategory("technical"));
-        categoryStats.put("other", faqRepository.countByCategory("other"));
         stats.put("categoryStats", categoryStats);
         
         return stats;

@@ -22,10 +22,13 @@ public class NoticeService {
         dto.setCreatedAt(LocalDateTime.now());
         dto.setViews(0); // 초기 조회수 0으로 설정
         if (dto.getStatus() == null) {
-            dto.setStatus("draft"); // 기본값은 임시저장
+            dto.setStatus("published"); // 기본값을 published로 변경
         }
         if (dto.getAuthor() == null) {
             dto.setAuthor("관리자"); // 기본 작성자
+        }
+        if (dto.getCategory() == null) {
+            dto.setCategory("general"); // 기본 카테고리
         }
         noticeRepository.save(dto);
     }

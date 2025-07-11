@@ -1,19 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import axios from '../axiosConfig';
 // import '../style/InquiryMy.css'; // 스타일 분리 시 사용
 
 const InquiryMy = () => {
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 실무에서는 userId를 인증정보에서 가져옴(여기선 생략)
   useEffect(() => {
-    // 실제 API 연동 시 fetch(`/api/inquiry/my`) 등 사용
-    // 여기선 더미 데이터로 대체
-    setLoading(true);
-    setTimeout(() => {
-      // 더미 데이터
+    if (!user) {
+      // navigate('/login');
+      return;
+    }
+    
+    loadMyInquiries();
+  }, [user, navigate]);
+
+  const loadMyInquiries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get('/api/inquiry/my');
+      const apiInquiries = response.data;
+      
+      // 응답이 배열인지 확인하고 안전하게 설정
+      if (Array.isArray(apiInquiries)) {
+        setInquiries(apiInquiries);
+      } else {
+        console.warn('API 응답이 배열이 아닙니다:', apiInquiries);
+        setInquiries([]);
+      }
+    } catch (error) {
+      console.error('내 문의 로드 실패:', error);
+      setError('문의 내역을 불러오는데 실패했습니다.');
+      
+      // API 실패 시 임시 데이터 사용
       setInquiries([
         {
           id: 1,
@@ -28,18 +54,12 @@ const InquiryMy = () => {
           title: '결제 취소 문의',
           createdAt: '2024-07-08',
           status: '처리중',
-        },
-        {
-          id: 3,
-          category: '기술지원',
-          title: '사이트 오류가 발생합니다',
-          createdAt: '2024-07-05',
-          status: '답변대기',
-        },
+        }
       ]);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
   return (
     <div className="inquiry-my-page" style={{maxWidth: 800, margin: '0 auto', padding: 24}}>

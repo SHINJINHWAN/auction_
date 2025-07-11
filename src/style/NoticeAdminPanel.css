@@ -27,6 +27,15 @@
   color: #1976d2;
   min-width: 180px;
 }
+.notice-status {
+  color: #666;
+  font-size: 0.9rem;
+  min-width: 80px;
+  padding: 2px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  text-align: center;
+}
 .notice-date {
   color: #888;
   font-size: 0.98rem;

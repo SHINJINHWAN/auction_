@@ -2,7 +2,6 @@ package com.auction.repository;
 
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,15 +21,15 @@ public class EventRepository {
         String sql = "INSERT INTO event (title, content, category, status, is_important, views, author, image_url, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql, 
             dto.getTitle(), 
-            dto.getContent(),
+            dto.getContent(), 
             dto.getCategory(),
             dto.getStatus(),
             dto.isImportant(),
             dto.getViews(),
             dto.getAuthor(),
             dto.getImageUrl(),
-            Date.valueOf(dto.getStartDate()), 
-            Date.valueOf(dto.getEndDate()), 
+            dto.getStartDate() != null ? Date.valueOf(dto.getStartDate()) : null,
+            dto.getEndDate() != null ? Date.valueOf(dto.getEndDate()) : null,
             Timestamp.valueOf(dto.getCreatedAt())
         );
     }
@@ -61,21 +60,8 @@ public class EventRepository {
     }
 
     public List<EventDto> findOngoingEvents() {
-        LocalDate today = LocalDate.now();
-        String sql = "SELECT * FROM event WHERE status = 'published' AND start_date <= ? AND end_date >= ? ORDER BY is_important DESC, created_at DESC";
-        return jdbcTemplate.query(sql, this::mapRowToDto, Date.valueOf(today), Date.valueOf(today));
-    }
-
-    public List<EventDto> findUpcomingEvents() {
-        LocalDate today = LocalDate.now();
-        String sql = "SELECT * FROM event WHERE status = 'published' AND start_date > ? ORDER BY start_date ASC";
-        return jdbcTemplate.query(sql, this::mapRowToDto, Date.valueOf(today));
-    }
-
-    public List<EventDto> findEndedEvents() {
-        LocalDate today = LocalDate.now();
-        String sql = "SELECT * FROM event WHERE end_date < ? ORDER BY end_date DESC";
-        return jdbcTemplate.query(sql, this::mapRowToDto, Date.valueOf(today));
+        String sql = "SELECT * FROM event WHERE status = 'published' AND start_date <= CURDATE() AND end_date >= CURDATE() ORDER BY is_important DESC, created_at DESC";
+        return jdbcTemplate.query(sql, this::mapRowToDto);
     }
 
     public EventDto findById(Long id) {
@@ -93,8 +79,8 @@ public class EventRepository {
             dto.isImportant(),
             dto.getAuthor(),
             dto.getImageUrl(),
-            Date.valueOf(dto.getStartDate()), 
-            Date.valueOf(dto.getEndDate()), 
+            dto.getStartDate() != null ? Date.valueOf(dto.getStartDate()) : null,
+            dto.getEndDate() != null ? Date.valueOf(dto.getEndDate()) : null,
             Timestamp.valueOf(dto.getUpdatedAt()), 
             dto.getId()
         );
@@ -130,12 +116,6 @@ public class EventRepository {
         return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
-    public long countOngoingEvents() {
-        LocalDate today = LocalDate.now();
-        String sql = "SELECT COUNT(*) FROM event WHERE status = 'published' AND start_date <= ? AND end_date >= ?";
-        return jdbcTemplate.queryForObject(sql, Long.class, Date.valueOf(today), Date.valueOf(today));
-    }
-
     private EventDto mapRowToDto(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
         EventDto dto = new EventDto();
         dto.setId(rs.getLong("id"));
@@ -147,8 +127,8 @@ public class EventRepository {
         dto.setViews(rs.getInt("views"));
         dto.setAuthor(rs.getString("author"));
         dto.setImageUrl(rs.getString("image_url"));
-        dto.setStartDate(rs.getDate("start_date").toLocalDate());
-        dto.setEndDate(rs.getDate("end_date").toLocalDate());
+        dto.setStartDate(rs.getDate("start_date") != null ? rs.getDate("start_date").toLocalDate() : null);
+        dto.setEndDate(rs.getDate("end_date") != null ? rs.getDate("end_date").toLocalDate() : null);
         dto.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         dto.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
         return dto;

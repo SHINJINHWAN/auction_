@@ -10,20 +10,17 @@ function AuctionCard({ auction }) {
     title = '제목 없음',
     startPrice = 0,
     highestBid = 0,
-    endTime,
-    imageUrl1,
+    endAt,
+    imageBase64,
   } = auction;
 
-  // 카드 내 썸네일: 없으면 placeholder
-  const imgSrc =
-    imageUrl1 && imageUrl1.trim() !== ''
-      ? `http://localhost:8080${imageUrl1}`
-      : 'https://placehold.co/200x120?text=No+Image';
+  // 카드 내 썸네일: Base64 이미지 또는 placeholder
+  const imgSrc = imageBase64 || 'https://placehold.co/200x120?text=No+Image';
 
   // 남은 시간(초) 상태
   const [remainingSeconds, setRemainingSeconds] = useState(() => {
-    if (!endTime) return 0;
-    const diff = new Date(endTime).getTime() - Date.now();
+    if (!endAt) return 0;
+    const diff = new Date(endAt).getTime() - Date.now();
     return diff > 0 ? Math.floor(diff / 1000) : 0;
   });
 
@@ -68,11 +65,7 @@ function AuctionCard({ auction }) {
       }}
     >
       <img
-         src={
-    auction.imageUrl1
-      ? `http://localhost:8080${encodeURI(auction.imageUrl1)}`
-      : 'https://placehold.co/200x120?text=No+Image'
-  }
+        src={imgSrc}
         alt="썸네일"
         style={{
           width: '200px',
@@ -115,8 +108,8 @@ AuctionCard.propTypes = {
     title: PropTypes.string.isRequired,
     startPrice: PropTypes.number.isRequired,
     highestBid: PropTypes.number,
-    endTime: PropTypes.string,
-    imageUrl1: PropTypes.string,
+    endAt: PropTypes.string,
+    imageBase64: PropTypes.string,
   }).isRequired,
 };
 

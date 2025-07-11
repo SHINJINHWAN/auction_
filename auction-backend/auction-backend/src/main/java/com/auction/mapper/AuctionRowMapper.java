@@ -1,11 +1,12 @@
 package com.auction.mapper;
 
-import com.auction.dto.AuctionDto;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.NonNull;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.auction.dto.AuctionDto;
 
 public class AuctionRowMapper implements RowMapper<AuctionDto> {
 

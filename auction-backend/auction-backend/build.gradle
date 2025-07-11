@@ -23,7 +23,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'     // ✅ WebSocket (지금 문제 해결)
     implementation 'org.mariadb.jdbc:mariadb-java-client:3.3.3'                 // ✅ MariaDB 드라이버
     implementation 'org.springframework.boot:spring-boot-starter-validation' // ✅ 유효성 검사
+    implementation 'com.h2database:h2'                                          // ✅ H2 데이터베이스 (개발용)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    // OAuth2 관련 의존성 모두 삭제됨
 }
 
 tasks.named('test') {

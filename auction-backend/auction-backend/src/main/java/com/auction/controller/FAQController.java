@@ -20,7 +20,7 @@ import com.auction.service.FAQService;
 
 @RestController
 @RequestMapping("/api/faq")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"}, allowCredentials = "true")
 public class FAQController {
     private final FAQService faqService;
 
@@ -29,6 +29,43 @@ public class FAQController {
     }
 
     // ===== 일반 사용자 API =====
+    
+    // FAQ 샘플 데이터 생성
+    @PostMapping("/sample-data")
+    public ResponseEntity<String> createSampleFAQs() {
+        try {
+            FAQDto faq1 = new FAQDto();
+            faq1.setQuestion("경매는 어떻게 참여하나요?");
+            faq1.setAnswer("경매 페이지에서 원하는 상품을 선택하고 입찰 버튼을 클릭하여 참여할 수 있습니다.");
+            faq1.setCategory("경매");
+            faq1.setStatus("published");
+            faq1.setImportant(true);
+            faq1.setAuthor("관리자");
+            faqService.createFAQ(faq1);
+
+            FAQDto faq2 = new FAQDto();
+            faq2.setQuestion("입찰 취소가 가능한가요?");
+            faq2.setAnswer("입찰 후 1시간 이내에는 취소가 가능하며, 그 이후에는 취소할 수 없습니다.");
+            faq2.setCategory("입찰");
+            faq2.setStatus("published");
+            faq2.setImportant(false);
+            faq2.setAuthor("관리자");
+            faqService.createFAQ(faq2);
+
+            FAQDto faq3 = new FAQDto();
+            faq3.setQuestion("배송은 언제 되나요?");
+            faq3.setAnswer("경매 종료 후 3일 이내에 배송이 시작되며, 배송 상황은 마이페이지에서 확인할 수 있습니다.");
+            faq3.setCategory("배송");
+            faq3.setStatus("published");
+            faq3.setImportant(false);
+            faq3.setAuthor("관리자");
+            faqService.createFAQ(faq3);
+
+            return ResponseEntity.ok("FAQ 샘플 데이터가 성공적으로 생성되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("FAQ 샘플 데이터 생성에 실패했습니다: " + e.getMessage());
+        }
+    }
     
     @GetMapping("/published")
     public List<FAQDto> getPublishedFAQs() {
@@ -47,7 +84,7 @@ public class FAQController {
 
     @GetMapping("/search")
     public List<FAQDto> searchFAQs(@RequestParam String term) {
-        return faqService.searchFAQs(term);
+        return faqService.searchFAQsByQuestion(term);
     }
 
     // ===== 관리자 API =====
@@ -96,17 +133,12 @@ public class FAQController {
     
     @GetMapping("/admin/search")
     public List<FAQDto> searchFAQsAdmin(@RequestParam String term) {
-        return faqService.searchFAQs(term);
+        return faqService.searchFAQsByQuestion(term);
     }
 
     @GetMapping("/admin/search/question")
     public List<FAQDto> searchFAQsByQuestion(@RequestParam String question) {
         return faqService.searchFAQsByQuestion(question);
-    }
-
-    @GetMapping("/admin/search/answer")
-    public List<FAQDto> searchFAQsByAnswer(@RequestParam String answer) {
-        return faqService.searchFAQsByAnswer(answer);
     }
 
     @GetMapping("/admin/status/{status}")

@@ -74,6 +74,26 @@
   margin-bottom: 36px;
 }
 
+.auction-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.bid-history-section {
+  order: 1;
+}
+
+.product-info-section {
+  order: 2;
+}
+
+.live-bidding-section {
+  grid-column: 1 / -1;
+  margin-bottom: 2rem;
+}
+
 .image-gallery {
   flex: 1.1;
   background: #fff;
@@ -136,6 +156,98 @@
   flex-direction: column;
   gap: 18px;
   align-items: stretch;
+}
+
+.current-price-display {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+}
+
+.current-price-display h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.price-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #03c75a;
+  margin-bottom: 15px;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.price-info span {
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.bidding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bid-button, .buy-now-button {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.bid-button {
+  background: linear-gradient(135deg, #03c75a 0%, #02a94a 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(3, 199, 90, 0.3);
+}
+
+.bid-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(3, 199, 90, 0.4);
+}
+
+.bid-button:disabled {
+  background: #b2eac7;
+  color: #fff;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.buy-now-button {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.buy-now-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.buy-now-button:disabled {
+  background: #f5b7b1;
+  color: #fff;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .price-info {
   margin-bottom: 10px;
@@ -398,6 +510,66 @@
   background: #e9ecef;
 }
 
+/* 입찰 모달 개선 스타일 */
+.current-price-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 10px;
+}
+
+.current-price-info p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+}
+
+.current-price-info strong {
+  color: #03c75a;
+  font-weight: 700;
+}
+
+.bid-validation {
+  margin-top: 10px;
+}
+
+.validation-error {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: #fdf2f2;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-bottom: 8px;
+}
+
+.bid-step-info {
+  color: #666;
+  font-size: 0.9rem;
+  background: #f8f9fa;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.buy-now-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 10px;
+}
+
+.buy-now-info p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+}
+
+.buy-now-info strong {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
 .auction-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -521,6 +693,9 @@
   .image-gallery, .bidding-section {
     max-width: 100%;
     min-width: 0;
+  }
+  .auction-details-grid {
+    grid-template-columns: 1fr;
   }
   .info-grid {
     grid-template-columns: 1fr;

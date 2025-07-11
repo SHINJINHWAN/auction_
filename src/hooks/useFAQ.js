@@ -8,7 +8,8 @@ export function useFAQList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(API_URL)
+    // 사용자 페이지에서는 published 상태의 FAQ만 가져옴
+    axios.get(`${API_URL}/published`)
       .then(res => setFaqs(Array.isArray(res.data) ? res.data : []))
       .catch(() => setFaqs([]))
       .finally(() => setLoading(false));

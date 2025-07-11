@@ -11,7 +11,7 @@ const Auction = () => {
   const [filteredAuctions, setFilteredAuctions] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/auctions")
+    fetch("/api/auctions")
       .then((res) => {
         if (!res.ok) throw new Error("서버 응답 오류");
         return res.json();
@@ -48,7 +48,7 @@ const Auction = () => {
   const getImageUrl = (imageUrl1) => {
     if (!imageUrl1) return "https://placehold.co/200x200?text=경매";
     if (imageUrl1.startsWith('/uploads/')) {
-      return `http://localhost:8080${imageUrl1}`;
+      return `/api${imageUrl1}`;
     }
     return imageUrl1;
   };

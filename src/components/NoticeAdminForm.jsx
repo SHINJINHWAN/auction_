@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import '../style/NoticeAdminForm.css';
 
-const initialState = { title: '', content: '' };
+const initialState = { 
+  title: '', 
+  content: '', 
+  category: 'general',
+  status: 'published',
+  isImportant: false
+};
 
 const NoticeAdminForm = ({ selectedNotice, onSubmit, onDelete, onCancel }) => {
   const [form, setForm] = useState(initialState);
@@ -12,8 +18,11 @@ const NoticeAdminForm = ({ selectedNotice, onSubmit, onDelete, onCancel }) => {
   }, [selectedNotice]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -43,6 +52,34 @@ const NoticeAdminForm = ({ selectedNotice, onSubmit, onDelete, onCancel }) => {
           onChange={handleChange}
           required
         />
+      </div>
+      <div>
+        <label>카테고리</label>
+        <select name="category" value={form.category} onChange={handleChange}>
+          <option value="general">일반</option>
+          <option value="important">중요</option>
+          <option value="event">이벤트</option>
+          <option value="maintenance">점검</option>
+          <option value="update">업데이트</option>
+        </select>
+      </div>
+      <div>
+        <label>상태</label>
+        <select name="status" value={form.status} onChange={handleChange}>
+          <option value="published">발행</option>
+          <option value="draft">임시저장</option>
+        </select>
+      </div>
+      <div className="checkbox-group">
+        <label>
+          <input
+            type="checkbox"
+            name="isImportant"
+            checked={form.isImportant}
+            onChange={handleChange}
+          />
+          중요 공지사항
+        </label>
       </div>
       <div className="notice-admin-form-btns">
         <button type="submit">{selectedNotice ? '수정' : '등록'}</button>

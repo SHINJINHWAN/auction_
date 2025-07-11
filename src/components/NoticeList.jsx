@@ -9,7 +9,8 @@ const NoticeList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/api/notice')
+    // 사용자 페이지에서는 published 상태의 공지사항만 가져옴
+    fetch('/api/notice/published')
       .then((res) => {
         if (!res.ok) throw new Error('공지사항 불러오기 실패');
         return res.json();
