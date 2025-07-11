@@ -7,6 +7,7 @@ import axios from "./axiosConfig";
 import Footer from "./components/Footer";
 import Navigation from "./components/Navigation";
 import QuickMenu from "./components/QuickMenu";
+import PrivateMessage from './components/PrivateMessage';
 
 // 페이지들
 import Home from "./pages/Home";
@@ -133,6 +134,7 @@ function App() {
               <Route path="/oauth2/success" element={<OAuth2Success />} />
               <Route path="/search" element={<SearchResult />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/messages" element={<PrivateMessage />} />
             </Routes>
           </main>
           <QuickMenu />

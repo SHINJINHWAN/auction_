@@ -1,9 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import '../style/PrivateMessage.css';
+import { UserContext } from '../UserContext';
 
-function PrivateMessage({ auctionId, userId, userName, onClose }) {
+function PrivateMessage(props) {
+  // UserContext에서 user 정보 가져오기
+  const { user } = useContext(UserContext);
+  // props로 받은 값이 없으면 user에서 자동 세팅
+  const auctionId = props.auctionId || '';
+  const userId = props.userId || (user ? user.id : '');
+  const userName = props.userName || (user ? user.nickname || user.name : '');
+  const onClose = props.onClose || (() => window.history.back());
+
   const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -128,6 +137,9 @@ function PrivateMessage({ auctionId, userId, userName, onClose }) {
     const date = new Date(dateString);
     return date.toLocaleString('ko-KR');
   };
+
+  // 로그인 안 했으면 아무것도 렌더링하지 않음
+  if (!userId) return null;
 
   return (
     <div className="private-message">

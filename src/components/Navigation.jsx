@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 import './Navigation.css';
 import { FaTrophy } from 'react-icons/fa';
+import NotificationBell from './NotificationBell';
+import { FaEnvelope } from 'react-icons/fa';
 
 const Navigation = () => {
   const location = useLocation();
@@ -98,28 +100,42 @@ const Navigation = () => {
 
         {/* 사용자 메뉴 */}
         <div className="nav-user">
-          <div className="auth-buttons">
-            {/* 로그인 버튼: 항상 노출, 평상문 스타일 */}
-            <button
-              className="auth-btn login-btn"
-              onClick={() => navigate('/login')}
-              style={{ marginRight: '8px' }}
-            >
-              로그인하기
-            </button>
-            {/* 로그아웃 버튼: 로그인 상태일 때만 노출, 평상문 스타일 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            {user && <NotificationBell />}
             {user && (
-              <button
-                className="user-btn logout-btn"
-                onClick={handleLogout}
-                style={{ marginRight: '8px' }}
-              >
-                로그아웃하기
-              </button>
+              <Link to="/messages" className="nav-link" title="쪽지함">
+                <FaEnvelope size={20} style={{ verticalAlign: 'middle' }} />
+              </Link>
             )}
-            {/* 회원가입 버튼: 로그인 안 한 경우만 노출 */}
+          </div>
+          <div className="auth-buttons">
+            {/* 로그인/회원가입: 로그인 안 한 경우만 노출 */}
             {!user && (
-              <Link to="/register" className="auth-btn register-btn">회원가입</Link>
+              <>
+                <button
+                  className="auth-btn login-btn"
+                  onClick={() => navigate('/login')}
+                  style={{ marginRight: '8px' }}
+                >
+                  로그인하기
+                </button>
+                <Link to="/register" className="auth-btn register-btn">회원가입</Link>
+              </>
+            )}
+            {/* 마이페이지/로그아웃: 로그인한 경우만 노출 */}
+            {user && (
+              <>
+                <Link to="/mypage" className="auth-btn mypage-btn" style={{ marginRight: '8px' }}>
+                  마이페이지 ({user.nickname || user.name}님)
+                </Link>
+                <button
+                  className="user-btn logout-btn"
+                  onClick={handleLogout}
+                  style={{ marginRight: '8px' }}
+                >
+                  로그아웃하기
+                </button>
+              </>
             )}
           </div>
           {/* 권한 및 인사말: 로그인 시 평상문 안내 */}
