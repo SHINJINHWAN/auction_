@@ -8,6 +8,7 @@ import com.auction.entity.User;
 public interface UserService {
     User register(UserDto userDto);
     User login(String usernameOrEmail, String password);
+    Optional<User> authenticate(String usernameOrEmail, String password);
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
 } 

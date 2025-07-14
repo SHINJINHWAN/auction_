@@ -27,6 +27,8 @@ public class AuctionDto {
     private Integer highestBid;
     private Boolean isClosed;
     private String winner;
+    private Integer viewCount;
+    private Integer bidCount;
 
     // 프론트엔드 호환성을 위한 추가 필드들
     private String imageUrl; // imageUrl1을 대체
@@ -107,6 +109,12 @@ public class AuctionDto {
     
     public String getWinner() { return winner; }
     public void setWinner(String winner) { this.winner = winner; }
+    
+    public Integer getViewCount() { return viewCount; }
+    public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
+    
+    public Integer getBidCount() { return bidCount; }
+    public void setBidCount(Integer bidCount) { this.bidCount = bidCount; }
 
     // 프론트엔드 호환성을 위한 메서드들
     public String getImageUrl() { 

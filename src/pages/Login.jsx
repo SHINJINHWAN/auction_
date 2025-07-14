@@ -27,43 +27,32 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // 실제 API 호출 대신 모의 로그인 처리
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 실제 백엔드 API 호출
+      const response = await axios.post("/auth/login", {
+        usernameOrEmail: form.usernameOrEmail,
+        password: form.password
+      });
       
-      // 테스트 계정 검증
-      if (userType === "admin") {
-        if (form.usernameOrEmail === "admin" && form.password === "1234") {
-          const mockUser = {
-            id: 1,
-            username: "admin",
-            email: "admin@auction.com",
-            nickname: "관리자",
-            role: "ADMIN"
-          };
-          localStorage.setItem("jwt", "mock-admin-token");
-          setUser(mockUser);
-          navigate("/notice/admin");
-        } else {
-          throw new Error("관리자 계정 정보가 올바르지 않습니다.");
-        }
+      const { token, user } = response.data;
+      
+      // JWT 토큰 저장
+      localStorage.setItem("jwt", token);
+      setUser(user);
+      
+      // 관리자인 경우 관리자 페이지로, 일반 사용자는 홈으로
+      if (user.role === "ADMIN") {
+        navigate("/notice/admin");
       } else {
-        if (form.usernameOrEmail === "testuser" && form.password === "1234") {
-          const mockUser = {
-            id: 2,
-            username: "testuser",
-            email: "test@auction.com",
-            nickname: "테스트유저",
-            role: "USER"
-          };
-          localStorage.setItem("jwt", "mock-user-token");
-          setUser(mockUser);
-          navigate("/");
-        } else {
-          throw new Error("로그인 정보가 올바르지 않습니다.");
-        }
+        navigate("/");
       }
+      
     } catch (err) {
-      setError(err.message || "로그인에 실패했습니다.");
+      console.error("로그인 실패:", err);
+      if (err.response?.status === 401) {
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      } else {
+        setError("로그인에 실패했습니다. 다시 시도해주세요.");
+      }
     } finally {
       setIsLoading(false);
     }

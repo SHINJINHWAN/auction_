@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./UserContext";
 import axios from "./axiosConfig";
+import FavoriteAlertProvider from "./components/FavoriteAlertProvider";
 
 // 컴포넌트들
 import Footer from "./components/Footer";
@@ -38,6 +39,7 @@ import EventAdmin from "./pages/EventAdmin";
 import OAuth2Success from "./pages/OAuth2Success";
 import SearchResult from "./pages/SearchResult";
 import MyPage from "./pages/MyPage";
+import Favorites from "./pages/Favorites";
 
 function App() {
   const [dashboardData, setDashboardData] = useState({
@@ -101,46 +103,49 @@ function App() {
 
   return (
     <UserProvider>
-      <Router>
-        <div className="App">
-          <Navigation />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home dashboardData={dashboardData} />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/auction" element={<Auction />} />
-              <Route path="/auction/:id" element={<AuctionDetail />} />
-              <Route path="/auction-new" element={<AuctionNew />} />
-              <Route path="/customer-service" element={<CustomerService />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/faq-list" element={<FAQList />} />
-              <Route path="/faq/admin" element={<FAQAdmin />} />
-              <Route path="/inquiry" element={<Inquiry />} />
-              <Route path="/inquiry-list" element={<InquiryList />} />
-              <Route path="/inquiry-my" element={<InquiryMy />} />
-              <Route path="/inquiry-new" element={<InquiryNew />} />
-              <Route path="/inquiry/:id" element={<InquiryDetail />} />
-              <Route path="/inquiry/admin" element={<InquiryAdmin />} />
-              <Route path="/inquiry/admin/:id" element={<InquiryAdminDetailPage />} />
-              <Route path="/notice" element={<Notice />} />
-              <Route path="/notice-list" element={<NoticeList />} />
-              <Route path="/notice/:id" element={<NoticeDetail />} />
-              <Route path="/notice/admin" element={<NoticeAdmin />} />
-              <Route path="/event" element={<Event />} />
-              <Route path="/event-list" element={<EventList />} />
-              <Route path="/event/:id" element={<EventDetail />} />
-              <Route path="/event/admin" element={<EventAdmin />} />
-              <Route path="/oauth2/success" element={<OAuth2Success />} />
-              <Route path="/search" element={<SearchResult />} />
-              <Route path="/mypage" element={<MyPage />} />
-              <Route path="/messages" element={<PrivateMessage />} />
-            </Routes>
-          </main>
-          <QuickMenu />
-          <Footer />
-        </div>
-      </Router>
+      <FavoriteAlertProvider>
+        <Router>
+          <div className="App">
+            <Navigation />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home dashboardData={dashboardData} />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/auction" element={<Auction />} />
+                <Route path="/auction/:id" element={<AuctionDetail />} />
+                <Route path="/auction-new" element={<AuctionNew />} />
+                <Route path="/customer-service" element={<CustomerService />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/faq-list" element={<FAQList />} />
+                <Route path="/faq/admin" element={<FAQAdmin />} />
+                <Route path="/inquiry" element={<Inquiry />} />
+                <Route path="/inquiry-list" element={<InquiryList />} />
+                <Route path="/inquiry-my" element={<InquiryMy />} />
+                <Route path="/inquiry-new" element={<InquiryNew />} />
+                <Route path="/inquiry/:id" element={<InquiryDetail />} />
+                <Route path="/inquiry/admin" element={<InquiryAdmin />} />
+                <Route path="/inquiry/admin/:id" element={<InquiryAdminDetailPage />} />
+                <Route path="/notice" element={<Notice />} />
+                <Route path="/notice-list" element={<NoticeList />} />
+                <Route path="/notice/:id" element={<NoticeDetail />} />
+                <Route path="/notice/admin" element={<NoticeAdmin />} />
+                <Route path="/event" element={<Event />} />
+                <Route path="/event-list" element={<EventList />} />
+                <Route path="/event/:id" element={<EventDetail />} />
+                <Route path="/event/admin" element={<EventAdmin />} />
+                <Route path="/oauth2/success" element={<OAuth2Success />} />
+                <Route path="/search" element={<SearchResult />} />
+                <Route path="/mypage" element={<MyPage />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/messages" element={<PrivateMessage />} />
+              </Routes>
+            </main>
+            <QuickMenu />
+            <Footer />
+          </div>
+        </Router>
+      </FavoriteAlertProvider>
     </UserProvider>
   );
 }

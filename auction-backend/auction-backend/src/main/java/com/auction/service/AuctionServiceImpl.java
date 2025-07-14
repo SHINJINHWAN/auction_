@@ -43,6 +43,8 @@ public class AuctionServiceImpl implements AuctionService {
         dto.setHighestBid(auction.getHighestBid());
         dto.setIsClosed(auction.getIsClosed());
         dto.setWinner(auction.getWinner());
+        dto.setViewCount(auction.getViewCount());
+        dto.setBidCount(auction.getBidCount());
         
         // 프론트엔드 호환성을 위한 필드 설정
         dto.setImageUrl(auction.getImageUrl1());
@@ -163,5 +165,27 @@ public class AuctionServiceImpl implements AuctionService {
         List<AuctionDto> all = getAllAuctions();
         Collections.shuffle(all);
         return all.stream().limit(count).collect(Collectors.toList());
+    }
+    
+    @Override
+    public void incrementViewCount(Long auctionId) {
+        Optional<Auction> auctionOpt = auctionRepository.findById(auctionId);
+        if (auctionOpt.isPresent()) {
+            Auction auction = auctionOpt.get();
+            Integer currentViewCount = auction.getViewCount();
+            auction.setViewCount(currentViewCount != null ? currentViewCount + 1 : 1);
+            auctionRepository.save(auction);
+        }
+    }
+    
+    @Override
+    public void incrementBidCount(Long auctionId) {
+        Optional<Auction> auctionOpt = auctionRepository.findById(auctionId);
+        if (auctionOpt.isPresent()) {
+            Auction auction = auctionOpt.get();
+            Integer currentBidCount = auction.getBidCount();
+            auction.setBidCount(currentBidCount != null ? currentBidCount + 1 : 1);
+            auctionRepository.save(auction);
+        }
     }
 } 

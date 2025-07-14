@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../style/Home.css";
 import axios from '../axiosConfig';
+import useAuctionSocket from '../hooks/useAuctionSocket';
+import FavoriteButton from '../components/FavoriteButton';
+import { UserContext } from '../UserContext';
 
 const Home = ({ dashboardData }) => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCategory, setSelectedCategory] = useState('전체');
-  const [randomAuctions, setRandomAuctions] = useState([]);
+  const [auctions, setAuctions] = useState(dashboardData?.auctions || []);
+  const [favoritedAuctions, setFavoritedAuctions] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
   
   // 현재 시간 업데이트
   useEffect(() => {
@@ -17,23 +23,80 @@ const Home = ({ dashboardData }) => {
     return () => clearInterval(timer);
   }, []);
 
+  // 실시간 경매 업데이트 콜백
+  const handleAuctionUpdate = useCallback((updatedAuction) => {
+    setAuctions(prevAuctions => {
+      const updatedAuctions = prevAuctions.map(auction => 
+        auction.id === updatedAuction.id ? { ...auction, ...updatedAuction } : auction
+      );
+      return updatedAuctions;
+    });
+  }, []);
+
+  // WebSocket 연결
+  useAuctionSocket(handleAuctionUpdate);
+
+  // dashboardData가 변경될 때 auctions 상태 업데이트
+  useEffect(() => {
+    if (dashboardData?.auctions) {
+      setAuctions(dashboardData.auctions);
+    }
+  }, [dashboardData?.auctions]);
+
+  // 찜한 경매 목록 로드
+  useEffect(() => {
+    if (user) {
+      loadFavoritedAuctions();
+    }
+  }, [user, auctions]);
+
+  const loadFavoritedAuctions = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingFavorites(true);
+      const response = await axios.get(`favorites/user/${user.id}`);
+      const favorites = response.data || [];
+      
+      // 찜한 경매 ID 목록 생성
+      const favoritedIds = favorites.map(fav => fav.auctionId);
+      
+      // 전체 경매 중에서 찜한 경매만 필터링
+      const favorited = auctions.filter(auction => favoritedIds.includes(auction.id));
+      setFavoritedAuctions(favorited);
+    } catch (error) {
+      console.error('찜한 경매 로드 실패:', error);
+      setFavoritedAuctions([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  };
+
   // 카테고리 목록
   const categories = ['전체', '가전', '전자제품', '패션', '명품', '도서', '취미', '스포츠'];
   
-  // 카테고리별 경매 필터링
-  const filteredAuctions = selectedCategory === '전체' 
-    ? (dashboardData?.auctions || [])
-    : (dashboardData?.auctions || []).filter(auction => auction.category === selectedCategory);
+  // 진행중인 경매만 필터링 (마감되지 않은 경매)
+  const activeAuctions = auctions.filter(auction => {
+    if (!auction.endAt) return false;
+    const now = currentTime.getTime();
+    const end = new Date(auction.endAt).getTime();
+    return end > now; // 아직 마감되지 않은 경매만
+  });
 
-  useEffect(() => {
-    if (filteredAuctions.length === 0) {
-      axios.get('/auctions/random?count=5')
-        .then(res => setRandomAuctions(res.data))
-        .catch(() => setRandomAuctions([]));
-    } else {
-      setRandomAuctions([]);
-    }
-  }, [filteredAuctions]);
+  // 진행중인 찜한 경매만 필터링
+  const activeFavoritedAuctions = favoritedAuctions.filter(auction => {
+    if (!auction.endAt) return false;
+    const now = currentTime.getTime();
+    const end = new Date(auction.endAt).getTime();
+    return end > now;
+  });
+
+  // 카테고리별 경매 필터링 (진행중인 경매 중에서)
+  const filteredAuctions = selectedCategory === '전체' 
+    ? activeAuctions
+    : activeAuctions.filter(auction => auction.category === selectedCategory);
+
+
 
   // 남은 시간 계산 함수
   const calculateRemainingTime = (endAt) => {
@@ -55,8 +118,24 @@ const Home = ({ dashboardData }) => {
   };
 
   // 경매 카드 컴포넌트
-  const AuctionCard = ({ auction }) => {
+  const AuctionCard = ({ auction, isFavorited = false }) => {
     const { hours, minutes, seconds, isEnded } = calculateRemainingTime(auction.endAt);
+    
+    // 실시간 시간 업데이트를 위한 상태
+    const [realTimeRemaining, setRealTimeRemaining] = useState({ hours, minutes, seconds, isEnded });
+    const [timeUpdated, setTimeUpdated] = useState(false);
+    
+    // 시간이 변경될 때마다 실시간 남은 시간 업데이트
+    useEffect(() => {
+      const { hours, minutes, seconds, isEnded } = calculateRemainingTime(auction.endAt);
+      const newRemaining = { hours, minutes, seconds, isEnded };
+      
+      if (JSON.stringify(realTimeRemaining) !== JSON.stringify(newRemaining)) {
+        setRealTimeRemaining(newRemaining);
+        setTimeUpdated(true);
+        setTimeout(() => setTimeUpdated(false), 300);
+      }
+    }, [currentTime, auction.endAt, realTimeRemaining]);
     
     // 이미지 소스 결정 로직 - Auction 페이지와 동일하게
     const getImageSrc = () => {
@@ -69,25 +148,42 @@ const Home = ({ dashboardData }) => {
     
     const imgSrc = getImageSrc();
     const currentPrice = Math.max(auction.startPrice, auction.highestBid || 0);
+    
+    // 실시간 현재가 업데이트를 위한 상태
+    const [realTimePrice, setRealTimePrice] = useState(currentPrice);
+    const [priceUpdated, setPriceUpdated] = useState(false);
+    
+    // 현재가가 변경될 때마다 실시간 가격 업데이트
+    useEffect(() => {
+      if (realTimePrice !== currentPrice) {
+        setRealTimePrice(currentPrice);
+        setPriceUpdated(true);
+        setTimeout(() => setPriceUpdated(false), 500);
+      }
+    }, [currentPrice, realTimePrice]);
 
     return (
-      <div className="auction-card">
+      <div className={`auction-card ${isFavorited ? 'favorited' : ''}`}>
         <div className="auction-image">
           <img src={imgSrc} alt={auction.title} />
           <div className="auction-category">{auction.category || '기타'}</div>
+          {isFavorited && <div className="favorited-badge">❤️ 찜한 경매</div>}
           {isEnded && <div className="auction-ended">경매 종료</div>}
+          <FavoriteButton auctionId={auction.id} />
         </div>
         <Link to={`/auction/${auction.id}`} className="auction-content-link">
           <div className="auction-content">
             <h3 className="auction-title">{auction.title}</h3>
             <div className="auction-price">
               <span className="price-label">현재가</span>
-              <span className="price-value">{currentPrice.toLocaleString()}원</span>
+              <span className={`price-value ${priceUpdated ? 'updated' : ''}`}>
+                {realTimePrice.toLocaleString()}원
+              </span>
             </div>
             <div className="auction-time">
               <span className="time-label">남은 시간</span>
-              <span className={`time-value ${isEnded ? 'ended' : ''}`}>
-                {isEnded ? '종료됨' : `${hours}시간 ${minutes}분 ${seconds}초`}
+              <span className={`time-value ${realTimeRemaining.isEnded ? 'ended' : ''} ${timeUpdated ? 'updated' : ''}`}>
+                {realTimeRemaining.isEnded ? '종료됨' : `${realTimeRemaining.hours}시간 ${realTimeRemaining.minutes}분 ${realTimeRemaining.seconds}초`}
               </span>
             </div>
             <div className="auction-meta">
@@ -105,17 +201,16 @@ const Home = ({ dashboardData }) => {
 
   // 더 명확한 디버깅 로그 추가
   console.log('🚀 Home 컴포넌트 렌더링 시작');
-  console.log('📊 전체 dashboardData:', dashboardData);
-  console.log('📋 notices 배열:', dashboardData?.notices);
-  console.log('❓ faqs 배열:', dashboardData?.faqs);
-  console.log('🎉 events 배열:', dashboardData?.events);
-  console.log('📦 auctions 배열:', dashboardData?.auctions);
+  console.log('📊 전체 경매 수:', auctions.length);
+  console.log('⏰ 현재 시간:', currentTime.toLocaleString());
+  console.log('🔄 진행중인 경매 수:', activeAuctions.length);
+  console.log('📋 마감된 경매 수:', auctions.length - activeAuctions.length);
   
   // 각 배열의 길이 확인
   console.log('📏 notices 길이:', dashboardData?.notices?.length || 0);
   console.log('📏 faqs 길이:', dashboardData?.faqs?.length || 0);
   console.log('📏 events 길이:', dashboardData?.events?.length || 0);
-  console.log('📏 auctions 길이:', dashboardData?.auctions?.length || 0);
+  console.log('📏 auctions 길이:', auctions?.length || 0);
   
   // 조건부 렌더링 조건 확인
   const noticesCondition = dashboardData?.notices && dashboardData.notices.length > 0;
@@ -145,6 +240,25 @@ const Home = ({ dashboardData }) => {
           전체 경매 보기
         </Link>
       </div>
+
+      {/* 찜한 경매 섹션 */}
+      {user && activeFavoritedAuctions.length > 0 && (
+        <section className="favorited-auction-section">
+          <div className="container">
+            <div className="section-header">
+              <h2>❤️ 내가 찜한 경매</h2>
+              <Link to="/favorites" className="view-all-favorites">
+                찜목록 전체보기 →
+              </Link>
+            </div>
+            <div className="auction-grid">
+              {activeFavoritedAuctions.slice(0, 4).map((auction) => (
+                <AuctionCard key={auction.id} auction={auction} isFavorited={true} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 경매 섹션 */}
       <section className="auction-section">
@@ -178,16 +292,12 @@ const Home = ({ dashboardData }) => {
                 ))
               )
             ) : (
-              randomAuctions.length > 0 ? (
-                <>
-                  <div className="no-auctions">해당 카테고리 경매는 없지만, 이런 경매는 어때요?</div>
-                  {randomAuctions.map((auction) => (
-                    <AuctionCard key={auction.id} auction={auction} />
-                  ))}
-                </>
-              ) : (
-                <div className="no-auctions">경매가 없습니다.</div>
-              )
+              <div className="no-auctions">
+                {selectedCategory === '전체' 
+                  ? '현재 진행중인 경매가 없습니다.' 
+                  : `현재 진행중인 ${selectedCategory} 카테고리 경매가 없습니다.`
+                }
+              </div>
             )}
           </div>
         </div>

@@ -6,6 +6,7 @@ import AuctionTimeLeft from '../components/AuctionTimeLeft';
 import AuctionTimer from '../components/AuctionTimer';
 import BidHistory from '../components/BidHistory';
 import LiveBidding from '../components/LiveBidding';
+import FavoriteButton from '../components/FavoriteButton';
 import '../style/AuctionDetail.css';
 
 const AuctionDetail = () => {
@@ -36,6 +37,12 @@ const AuctionDetail = () => {
         setAuction(data);
         setCurrentPrice(Math.max(data.startPrice, data.highestBid || 0));
         setLoading(false);
+        
+        // 조회수 증가
+        fetch(`/api/auctions/${id}/view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        }).catch(err => console.log('조회수 증가 실패:', err));
       })
       .catch((err) => {
         setAuction(null);
@@ -195,6 +202,9 @@ const AuctionDetail = () => {
       <div className="auction-header">
         <div className="auction-title-section">
           <h1>{auction.title}</h1>
+          <div className="auction-seller-id" style={{fontSize:'0.98rem',color:'#888',marginTop:'4px',fontWeight:500}}>
+            판매자: {auction.seller || auction.userId || '알수없음'}
+          </div>
           <div className="auction-meta">
             <span className="category">{auction.category}</span>
             <span className="condition">{auction.status}</span>
@@ -211,6 +221,7 @@ const AuctionDetail = () => {
               }}
             />
           </div>
+          <FavoriteButton auctionId={auction.id} />
         </div>
       </div>
 
@@ -341,7 +352,7 @@ const AuctionDetail = () => {
         <h2>판매자 정보</h2>
         <div className="seller-card">
           <div className="seller-header">
-            <div className="seller-name">{auction.brand}</div>
+            <div className="seller-name">아이디: {auction.seller || auction.userId || '알수없음'}</div>
           </div>
         </div>
       </div>

@@ -32,13 +32,15 @@ public class BidServiceImpl implements BidService {
         // 입찰 저장
         bidRepository.save(bid);
         
-        // 경매 정보 업데이트 (최고가 갱신)
+        // 경매 정보 업데이트 (최고가 갱신 및 입찰수 증가)
         AuctionDto auction = auctionService.getAuctionById(bid.getAuctionId());
         if (auction != null) {
             Long highestBid = bidRepository.findHighestBidByAuctionId(bid.getAuctionId());
             if (highestBid == null) highestBid = 0L;
             auction.setHighestBid((int) Math.max(highestBid, auction.getStartPrice().longValue()));
-            // updateHighestBid 메서드는 나중에 구현하거나 다른 방식으로 처리
+            
+            // 입찰수 증가
+            auctionService.incrementBidCount(bid.getAuctionId());
             
             // WebSocket으로 실시간 업데이트 전송
             messagingTemplate.convertAndSend("/topic/auction-updates", auction);

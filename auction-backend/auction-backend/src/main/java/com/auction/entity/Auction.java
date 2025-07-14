@@ -85,6 +85,12 @@ public class Auction {
     @Column(length = 100)
     private String winner;
 
+    @Column(nullable = false)
+    private Integer viewCount;
+
+    @Column(nullable = false)
+    private Integer bidCount;
+
     public Auction() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -96,6 +102,8 @@ public class Auction {
         this.autoExtend = false;
         this.shippingFee = "무료";
         this.shippingType = "택배";
+        this.viewCount = 0;
+        this.bidCount = 0;
     }
 
     // Getters and Setters
@@ -170,4 +178,10 @@ public class Auction {
     
     public String getWinner() { return winner; }
     public void setWinner(String winner) { this.winner = winner; }
+    
+    public Integer getViewCount() { return viewCount; }
+    public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
+    
+    public Integer getBidCount() { return bidCount; }
+    public void setBidCount(Integer bidCount) { this.bidCount = bidCount; }
 } 

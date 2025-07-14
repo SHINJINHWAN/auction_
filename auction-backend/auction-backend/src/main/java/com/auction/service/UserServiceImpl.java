@@ -44,6 +44,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> authenticate(String usernameOrEmail, String password) {
+        // 사용자명 또는 이메일로 사용자 찾기
+        Optional<User> userOpt = userRepository.findByUsername(usernameOrEmail);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByEmail(usernameOrEmail);
+        }
+        
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // 평문 비교 (실제 프로덕션에서는 암호화된 비밀번호 비교)
+            if (password.equals(user.getPassword())) {
+                return userOpt;
+            }
+        }
+        
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }

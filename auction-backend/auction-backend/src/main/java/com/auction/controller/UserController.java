@@ -1,6 +1,5 @@
 package com.auction.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auction.dto.UserDto;
@@ -39,6 +37,47 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+        try {
+            String usernameOrEmail = loginRequest.get("usernameOrEmail");
+            String password = loginRequest.get("password");
+            
+            // 사용자 인증
+            Optional<User> userOpt = userService.authenticate(usernameOrEmail, password);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                
+                // JWT 토큰 생성
+                Map<String, Object> claims = Map.of(
+                    "id", user.getId(),
+                    "username", user.getUsername(),
+                    "role", user.getRole()
+                );
+                String token = jwtUtil.generateToken(claims, user.getEmail());
+                
+                // 응답 데이터 구성
+                Map<String, Object> response = Map.of(
+                    "token", token,
+                    "user", Map.of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "email", user.getEmail(),
+                        "nickname", user.getNickname(),
+                        "role", user.getRole()
+                    )
+                );
+                
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(401).body("Invalid credentials");
+            }
+        } catch (Exception e) {
+            logger.error("로그인 실패", e);
+            return ResponseEntity.status(500).body("Login failed");
+        }
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         try {
@@ -48,14 +87,24 @@ public class UserController {
                     String email = jwtUtil.getSubject(token);
                     Optional<User> userOpt = userService.findByEmail(email);
                     if (userOpt.isPresent()) {
-                        return ResponseEntity.ok(userOpt.get());
+                        User user = userOpt.get();
+                        // JSON 형태로 사용자 정보 반환
+                        Map<String, Object> userInfo = Map.of(
+                            "id", user.getId(),
+                            "username", user.getUsername(),
+                            "email", user.getEmail(),
+                            "nickname", user.getNickname(),
+                            "role", user.getRole()
+                        );
+                        return ResponseEntity.ok(userInfo);
                     }
                 }
             }
-            return ResponseEntity.status(401).body("Invalid token");
+            // JSON 형태로 에러 응답
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
         } catch (Exception e) {
             logger.error("토큰 검증 실패", e);
-            return ResponseEntity.status(401).body("Invalid token");
+            return ResponseEntity.status(401).body(Map.of("error", "Token validation failed"));
         }
     }
 

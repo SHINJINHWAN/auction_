@@ -1,11 +1,8 @@
 package com.auction.service;
 
-import com.auction.dto.AuctionDto;
-import com.auction.repository.AuctionRepository;
-import com.auction.repository.BidRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
+
+import com.auction.dto.AuctionDto;
 
 public interface AuctionService {
     AuctionDto createAuction(AuctionDto auctionDto);
@@ -15,4 +12,10 @@ public interface AuctionService {
     void deleteAuction(Long id);
     AuctionDto checkAndCloseAuction(AuctionDto auctionDto);
     List<AuctionDto> getRandomAuctions(int count);
+    
+    // 조회수 증가
+    void incrementViewCount(Long auctionId);
+    
+    // 입찰수 증가
+    void incrementBidCount(Long auctionId);
 }

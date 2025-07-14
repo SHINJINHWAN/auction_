@@ -232,6 +232,19 @@ public class AuctionController {
             return ResponseEntity.status(500).body(null);
         }
     }
+    
+    // 조회수 증가 API
+    @PostMapping("/{id}/view")
+    public ResponseEntity<String> incrementViewCount(@PathVariable Long id) {
+        try {
+            logger.info("경매 {} 조회수 증가", id);
+            auctionService.incrementViewCount(id);
+            return ResponseEntity.ok("조회수가 증가되었습니다.");
+        } catch (Exception e) {
+            logger.error("조회수 증가 실패 - id: {}", id, e);
+            return ResponseEntity.status(500).body("조회수 증가에 실패했습니다: " + e.getMessage());
+        }
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<AuctionDto> updateAuction(@PathVariable Long id, @RequestBody AuctionDto auctionDto) {

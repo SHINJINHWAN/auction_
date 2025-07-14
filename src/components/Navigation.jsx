@@ -38,6 +38,11 @@ const Navigation = () => {
     { path: '/customer-service', label: '고객센터', icon: '📞' }
   ];
 
+  // 로그인한 사용자만 좋아요 메뉴 표시 (임시로 항상 표시)
+  const userNavItems = [
+    { path: '/favorites', label: '찜한 경매', icon: '❤️' }
+  ];
+
   const handleLogout = () => {
     localStorage.removeItem('jwt');
     setUser(null);
@@ -100,6 +105,27 @@ const Navigation = () => {
 
         {/* 사용자 메뉴 */}
         <div className="nav-user">
+          {/* 사용자 전용 메뉴 */}
+          {user && (
+            <div className="user-nav-menu">
+              <ul className="user-nav-list">
+                {userNavItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <li key={item.path} className="user-nav-item">
+                      <Link
+                        to={item.path}
+                        className={`user-nav-link ${isActive ? 'active' : ''}`}
+                      >
+                        <span className="user-nav-icon">{item.icon}</span>
+                        <span className="user-nav-label">{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             {user && <NotificationBell />}
             {user && (
