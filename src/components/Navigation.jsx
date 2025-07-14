@@ -6,12 +6,39 @@ import { FaTrophy } from 'react-icons/fa';
 import NotificationBell from './NotificationBell';
 import { FaEnvelope } from 'react-icons/fa';
 import { IoPersonCircle } from "react-icons/io5";
+import { useState, useRef, useEffect } from 'react';
 
 const Navigation = () => {
   const location = useLocation();
   const { user, logout } = useUser();
   const navigate = useNavigate();
   const isAdmin = user && user.role === 'ADMIN';
+
+  // 드롭다운 상태 관리
+  const [myPageOpen, setMyPageOpen] = useState(false);
+  const myPageRef = useRef(null);
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (myPageRef.current && !myPageRef.current.contains(event.target)) {
+        setMyPageOpen(false);
+      }
+    }
+    if (myPageOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [myPageOpen]);
+
+  // 마이페이지 드롭다운 토글 함수
+  const toggleMyPage = () => {
+    setMyPageOpen((prev) => !prev);
+  };
 
   const navItems = [
     { path: '/', label: '홈', icon: '🏠' },
@@ -106,45 +133,66 @@ const Navigation = () => {
         {/* 사용자 메뉴 */}
         <div className="nav-user">
           {/* 사용자 전용 메뉴 */}
-          {user && (
-            <div className="user-nav-menu">
-              <ul className="user-nav-list">
-                {userNavItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <li key={item.path} className="user-nav-item">
-                      <Link
-                        to={item.path}
-                        className={`user-nav-link ${isActive ? 'active' : ''}`}
-                      >
-                        <span className="user-nav-icon">{item.icon}</span>
-                        <span className="user-nav-label">{item.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            {user && <NotificationBell />}
-            {user && (
-              <div onClick={() => navigate('/messages')} className="" title="쪽지함">
-                <FaEnvelope size={20} style={{ verticalAlign: 'middle' }} />
-              </div>
-            )}
+            
             {user && (
               <>
-                <Link to="/mypage" className="auth-btn mypage-btn" style={{ marginRight: '8px' }}>
-                  <IoPersonCircle size={20} style={{ verticalAlign: 'middle' }} />
-                </Link>
-                <button
-                  className="user-btn logout-btn"
-                  onClick={handleLogout}
-                  style={{ marginRight: '8px' }}
-                >
-                  로그아웃하기
-                </button>
+                <div style={{ position: 'relative', marginRight: '8px' }} ref={myPageRef}>
+                  <div
+                    className="auth-btn mypage-btn"
+                    style={{ cursor: 'pointer' }}
+                    onClick={toggleMyPage}
+                    title="마이페이지"
+                  >
+                    <IoPersonCircle size={30} style={{ verticalAlign: 'middle' }} />
+                  </div>
+                  {myPageOpen && (
+                    <div className="mypage-dropdown" style={{
+                      position: 'absolute',
+                      top: '32px',
+                      right: 0,
+                      background: '#fff',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                      minWidth: '160px',
+                      zIndex: 1000,
+                      padding: '8px 0'
+                    }}>
+                      <div style={{ padding: '8px 16px', fontWeight: 'bold', borderBottom: '1px solid #eee' }}>{user?.username || '마이페이지'}</div>
+                      <button
+                        className="dropdown-item"
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 16px', cursor: 'pointer' }}
+                        onClick={() => { setMyPageOpen(false); navigate('/messages'); }}
+                      >
+                        <FaEnvelope size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} /> 쪽지함
+                      </button>
+                      <button
+                        className="dropdown-item"
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 16px', cursor: 'pointer' }}
+                        onClick={() => { setMyPageOpen(false); navigate('/notifications'); }}
+                      >
+                        <NotificationBell size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} /> 알림
+                      </button>
+                      <button
+                        className="dropdown-item"
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 16px', cursor: 'pointer' }}
+                        onClick={() => { setMyPageOpen(false); navigate('/favorites'); }}
+                      >
+                        <span style={{ marginRight: 8, verticalAlign: 'middle' }}>❤️</span> 찜한 경매
+                      </button>
+                      <button
+                        className="dropdown-item"
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 16px', cursor: 'pointer', color: '#d32f2f' }}
+                        onClick={() => { setMyPageOpen(false); handleLogout(); }}
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
+               
               </>
             )}
           </div>
