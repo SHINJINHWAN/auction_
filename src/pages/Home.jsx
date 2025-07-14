@@ -4,24 +4,16 @@ import "../style/Home.css";
 import axios from '../axiosConfig';
 import useAuctionSocket from '../hooks/useAuctionSocket';
 import FavoriteButton from '../components/FavoriteButton';
+import TimeDisplay from '../components/TimeDisplay';
 import { useUser } from '../UserContext';
 
 const Home = ({ dashboardData }) => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [auctions, setAuctions] = useState(dashboardData?.auctions || []);
   const [favoritedAuctions, setFavoritedAuctions] = useState([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
-  
-  // 현재 시간 업데이트
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // 실시간 경매 업데이트 콜백
   const handleAuctionUpdate = useCallback((updatedAuction) => {
@@ -78,7 +70,7 @@ const Home = ({ dashboardData }) => {
   // 진행중인 경매만 필터링 (마감되지 않은 경매)
   const activeAuctions = auctions.filter(auction => {
     if (!auction.endAt) return false;
-    const now = currentTime.getTime();
+    const now = new Date().getTime();
     const end = new Date(auction.endAt).getTime();
     return end > now; // 아직 마감되지 않은 경매만
   });
@@ -86,7 +78,7 @@ const Home = ({ dashboardData }) => {
   // 진행중인 찜한 경매만 필터링
   const activeFavoritedAuctions = favoritedAuctions.filter(auction => {
     if (!auction.endAt) return false;
-    const now = currentTime.getTime();
+    const now = new Date().getTime();
     const end = new Date(auction.endAt).getTime();
     return end > now;
   });
@@ -98,44 +90,10 @@ const Home = ({ dashboardData }) => {
 
 
 
-  // 남은 시간 계산 함수
-  const calculateRemainingTime = (endAt) => {
-    if (!endAt) return { hours: 0, minutes: 0, seconds: 0, isEnded: true };
-    
-    const now = new Date().getTime();
-    const end = new Date(endAt).getTime();
-    const diff = end - now;
-    
-    if (diff <= 0) {
-      return { hours: 0, minutes: 0, seconds: 0, isEnded: true };
-    }
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return { hours, minutes, seconds, isEnded: false };
-  };
+
 
   // 경매 카드 컴포넌트
   const AuctionCard = ({ auction, isFavorited = false }) => {
-    const { hours, minutes, seconds, isEnded } = calculateRemainingTime(auction.endAt);
-    
-    // 실시간 시간 업데이트를 위한 상태
-    const [realTimeRemaining, setRealTimeRemaining] = useState({ hours, minutes, seconds, isEnded });
-    const [timeUpdated, setTimeUpdated] = useState(false);
-    
-    // 시간이 변경될 때마다 실시간 남은 시간 업데이트
-    useEffect(() => {
-      const { hours, minutes, seconds, isEnded } = calculateRemainingTime(auction.endAt);
-      const newRemaining = { hours, minutes, seconds, isEnded };
-      
-      if (JSON.stringify(realTimeRemaining) !== JSON.stringify(newRemaining)) {
-        setRealTimeRemaining(newRemaining);
-        setTimeUpdated(true);
-        setTimeout(() => setTimeUpdated(false), 300);
-      }
-    }, [currentTime, auction.endAt, realTimeRemaining]);
     
     // 이미지 소스 결정 로직 - Auction 페이지와 동일하게
     const getImageSrc = () => {
@@ -168,7 +126,6 @@ const Home = ({ dashboardData }) => {
           <img src={imgSrc} alt={auction.title} />
           <div className="auction-category">{auction.category || '기타'}</div>
           {isFavorited && <div className="favorited-badge">❤️ 찜한 경매</div>}
-          {isEnded && <div className="auction-ended">경매 종료</div>}
           <FavoriteButton auctionId={auction.id} />
         </div>
         <Link to={`/auction/${auction.id}`} className="auction-content-link">
@@ -182,9 +139,12 @@ const Home = ({ dashboardData }) => {
             </div>
             <div className="auction-time">
               <span className="time-label">남은 시간</span>
-              <span className={`time-value ${realTimeRemaining.isEnded ? 'ended' : ''} ${timeUpdated ? 'updated' : ''}`}>
-                {realTimeRemaining.isEnded ? '종료됨' : `${realTimeRemaining.hours}시간 ${realTimeRemaining.minutes}분 ${realTimeRemaining.seconds}초`}
-              </span>
+              <TimeDisplay 
+                startTime={auction.startAt || new Date().toISOString()}
+                endTime={auction.endAt}
+                mode="compact"
+                className="time-value"
+              />
             </div>
             <div className="auction-meta">
               <span className="bid-count">입찰 {auction.bidCount || 0}회</span>
@@ -202,7 +162,6 @@ const Home = ({ dashboardData }) => {
   // 더 명확한 디버깅 로그 추가
   console.log('🚀 Home 컴포넌트 렌더링 시작');
   console.log('📊 전체 경매 수:', auctions.length);
-  console.log('⏰ 현재 시간:', currentTime.toLocaleString());
   console.log('🔄 진행중인 경매 수:', activeAuctions.length);
   console.log('📋 마감된 경매 수:', auctions.length - activeAuctions.length);
   
@@ -223,10 +182,6 @@ const Home = ({ dashboardData }) => {
   
   return (
     <div className="home-container">
-      {/* 현재 시간 표시 */}
-      <div className="current-time">
-        <span>현재 시간: {currentTime.toLocaleString('ko-KR')}</span>
-      </div>
 
       {/* 상단 경매 등록/전체보기 버튼 영역 */}
       <div className="auction-action-bar">

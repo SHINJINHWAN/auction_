@@ -5,6 +5,7 @@ import './Navigation.css';
 import { FaTrophy } from 'react-icons/fa';
 import NotificationBell from './NotificationBell';
 import { FaEnvelope } from 'react-icons/fa';
+import { IoPersonCircle } from "react-icons/io5";
 
 const Navigation = () => {
   const location = useLocation();
@@ -128,9 +129,23 @@ const Navigation = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             {user && <NotificationBell />}
             {user && (
-              <Link to="/messages" className="nav-link" title="쪽지함">
+              <div onClick={() => navigate('/messages')} className="" title="쪽지함">
                 <FaEnvelope size={20} style={{ verticalAlign: 'middle' }} />
-              </Link>
+              </div>
+            )}
+            {user && (
+              <>
+                <Link to="/mypage" className="auth-btn mypage-btn" style={{ marginRight: '8px' }}>
+                  <IoPersonCircle size={20} style={{ verticalAlign: 'middle' }} />
+                </Link>
+                <button
+                  className="user-btn logout-btn"
+                  onClick={handleLogout}
+                  style={{ marginRight: '8px' }}
+                >
+                  로그아웃하기
+                </button>
+              </>
             )}
           </div>
           <div className="auth-buttons">
@@ -148,30 +163,9 @@ const Navigation = () => {
               </>
             )}
             {/* 마이페이지/로그아웃: 로그인한 경우만 노출 */}
-            {user && (
-              <>
-                <Link to="/mypage" className="auth-btn mypage-btn" style={{ marginRight: '8px' }}>
-                  마이페이지 ({user.nickname || user.name}님)
-                </Link>
-                <button
-                  className="user-btn logout-btn"
-                  onClick={handleLogout}
-                  style={{ marginRight: '8px' }}
-                >
-                  로그아웃하기
-                </button>
-              </>
-            )}
           </div>
           {/* 권한 및 인사말: 로그인 시 평상문 안내 */}
-          {user && (
-            <div className="user-info" style={{ marginTop: '4px', fontSize: '0.95em' }}>
-              {user.nickname || user.name}님, 반갑습니다.{' '}
-              {user.role === 'ADMIN'
-                ? '당신은 관리자 권한이 있습니다.'
-                : '일반 회원으로 로그인 중입니다.'}
-            </div>
-          )}
+          
         </div>
       </div>
     </nav>
