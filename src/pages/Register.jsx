@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useUser } from "../UserContext";
 import "../style/Register.css";
 
 const Register = () => {
@@ -22,6 +22,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
+  const { register } = useUser();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -70,6 +71,12 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 중복 제출 방지
+    if (isLoading) {
+      return;
+    }
+    
     setError("");
     setSuccess(false);
     setIsLoading(true);
@@ -80,17 +87,30 @@ const Register = () => {
     }
 
     try {
-      // 실제 API 호출 대신 모의 회원가입 처리
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // UserContext의 register 함수 사용
+      const result = await register({
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        phone: form.phone,
+        nickname: form.nickname,
+        address: form.address,
+        socialType: form.socialType
+      });
       
-      setSuccess(true);
-      
-      // 3초 후 로그인 페이지로 이동
-      setTimeout(() => {
-        // navigate("/login");
-      }, 3000);
+      if (result.success) {
+        setSuccess(true);
+        
+        // 3초 후 로그인 페이지로 이동
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      } else {
+        setError(result.error);
+      }
     } catch (err) {
-      setError(err.response?.data?.error || "회원가입에 실패했습니다.");
+      setError("회원가입에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }

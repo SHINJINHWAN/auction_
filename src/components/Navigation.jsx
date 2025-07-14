@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import './Navigation.css';
 import { FaTrophy } from 'react-icons/fa';
 import NotificationBell from './NotificationBell';
@@ -8,7 +8,7 @@ import { FaEnvelope } from 'react-icons/fa';
 
 const Navigation = () => {
   const location = useLocation();
-  const { user, setUser } = useContext(UserContext);
+  const { user, logout } = useUser();
   const navigate = useNavigate();
   const isAdmin = user && user.role === 'ADMIN';
 
@@ -44,8 +44,7 @@ const Navigation = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('jwt');
-    setUser(null);
+    logout();
     navigate('/');
   };
 

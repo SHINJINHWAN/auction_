@@ -54,7 +54,7 @@ function App() {
     const fetchDashboardData = async () => {
       try {
         console.log("🚀 대시보드 데이터 로드 시작");
-        const response = await axios.get("/dashboard");
+        const response = await axios.get("/api/dashboard");
         console.log("✅ 대시보드 데이터 응답 성공:", response.data);
         console.log("📊 받은 데이터 구조:", {
           auctions: response.data.auctions?.length || 0,
@@ -68,11 +68,11 @@ function App() {
         // 샘플 데이터 생성 시도
         try {
           console.log("🔄 샘플 데이터 생성 시도");
-          await axios.post("/sample-data");
+          await axios.post("/api/sample-data");
           console.log("✅ 샘플 데이터 생성 완료");
           
           // 다시 데이터 로드 시도
-          const retryResponse = await axios.get("/dashboard");
+          const retryResponse = await axios.get("/api/dashboard");
           console.log("🔄 재시도 후 데이터:", retryResponse.data);
           setDashboardData(retryResponse.data);
         } catch (sampleError) {

@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../style/Home.css";
 import axios from '../axiosConfig';
 import useAuctionSocket from '../hooks/useAuctionSocket';
 import FavoriteButton from '../components/FavoriteButton';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 
 const Home = ({ dashboardData }) => {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [auctions, setAuctions] = useState(dashboardData?.auctions || []);
@@ -55,7 +55,7 @@ const Home = ({ dashboardData }) => {
     
     try {
       setLoadingFavorites(true);
-      const response = await axios.get(`favorites/user/${user.id}`);
+      const response = await axios.get(`/api/favorites/user/${user.id}`);
       const favorites = response.data || [];
       
       // 찜한 경매 ID 목록 생성

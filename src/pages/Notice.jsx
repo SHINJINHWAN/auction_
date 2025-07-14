@@ -20,7 +20,7 @@ const Notice = () => {
     try {
       setLoading(true);
       // 사용자 페이지에서는 published 상태의 공지사항만 가져옴
-      const response = await axios.get('/notice/published');
+      const response = await axios.get('/api/notice/published');
       const data = Array.isArray(response.data) ? response.data : [];
       
       // 필터링 적용

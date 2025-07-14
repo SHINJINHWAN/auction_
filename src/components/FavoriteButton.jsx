@@ -14,7 +14,7 @@ const FavoriteButton = ({ auctionId, initialIsFavorited = false, onFavoriteChang
     const checkFavoriteStatus = async () => {
       try {
         if (user && auctionId) {
-          const response = await axios.get(`favorites/${auctionId}/check?userId=${user.id}`);
+          const response = await axios.get(`/api/favorites/${auctionId}/check?userId=${user.id}`);
           setIsFavorited(response.data.isFavorited);
         }
       } catch (error) {
@@ -54,7 +54,7 @@ const FavoriteButton = ({ auctionId, initialIsFavorited = false, onFavoriteChang
 
     setIsLoading(true);
     try {
-      const response = await axios.post(`favorites/${auctionId}/toggle?userId=${user.id}`);
+      const response = await axios.post(`/api/favorites/${auctionId}/toggle?userId=${user.id}`);
       
       if (response.data.success) {
         setIsFavorited(response.data.isFavorited);

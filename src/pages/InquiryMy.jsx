@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import axios from '../axiosConfig';
 // import '../style/InquiryMy.css'; // 스타일 분리 시 사용
 
 const InquiryMy = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const navigate = useNavigate();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);

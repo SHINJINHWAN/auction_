@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import axios from '../axiosConfig';
 import '../style/FAQAdmin.css';
 
 const FAQAdmin = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const navigate = useNavigate();
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);

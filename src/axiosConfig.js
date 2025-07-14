@@ -1,18 +1,20 @@
-import axios from "axios";
+import axios from 'axios';
 
-// 백엔드 서버 URL 설정
-axios.defaults.baseURL = "/api";
-axios.defaults.withCredentials = true;
+// axios 기본 설정
+axios.defaults.baseURL = "";
 
+// 요청 인터셉터 - 토큰 자동 추가
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("jwt");
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 export default axios; 

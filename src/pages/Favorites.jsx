@@ -36,7 +36,7 @@ const Favorites = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`favorites/user/${user.id}`);
+      const response = await axios.get(`/api/favorites/user/${user.id}`);
       setFavorites(response.data || []);
     } catch (error) {
       console.error('좋아요 목록 로드 실패:', error);

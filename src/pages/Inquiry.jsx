@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import axios from '../axiosConfig';
 import '../style/Inquiry.css';
 
 const Inquiry = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const navigate = useNavigate();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);

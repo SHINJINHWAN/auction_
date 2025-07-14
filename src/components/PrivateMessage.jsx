@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import '../style/PrivateMessage.css';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 
 function PrivateMessage(props) {
   // UserContext에서 user 정보 가져오기
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   // props로 받은 값이 없으면 user에서 자동 세팅
   const auctionId = props.auctionId || '';
   const userId = props.userId || (user ? user.id : '');

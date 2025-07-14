@@ -1,47 +1,107 @@
 package com.auction.util;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
-import java.security.Key;
+import java.io.IOException;
 import java.util.Date;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtUtil {
-    private static final String SECRET_KEY = "my-super-secret-key-for-jwt-should-be-long-and-random-1234567890";
-    private static final long EXPIRATION_MS = 1000 * 60 * 60 * 24; // 1일
-    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
-    public String generateToken(Map<String, Object> claims, String subject) {
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    @Value("${jwt.access-token.expiration}")
+    private long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token.expiration}")
+    private long refreshTokenExpiration;
+
+    public String generateAccessToken(String username, List<String> roles) {
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
+                .setSubject(username)
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
-    public Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+    }
+
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        String username = claims.getSubject();
+        List<String> roles = claims.get("roles", List.class);
+        List<SimpleGrantedAuthority> authorities = roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .collect(Collectors.toList());
+        return new UsernamePasswordAuthenticationToken(username, null, authorities);
+    }
+
+    public String getUsername(String token) {
+        Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        return claims.getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (ExpiredJwtException e) {
+            return false;
+        } catch (Exception e) {
             return false;
         }
     }
 
-    public String getSubject(String token) {
-        return getClaims(token).getSubject();
+    public boolean isTokenExpired(String token) {
+        try {
+            Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+            return claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public OncePerRequestFilter jwtAuthenticationFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                    throws ServletException, IOException {
+                String header = request.getHeader("Authorization");
+                if (header != null && header.startsWith("Bearer ")) {
+                    String token = header.substring(7);
+                    if (validateToken(token)) {
+                        Authentication auth = getAuthentication(token);
+                        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
     }
 } 

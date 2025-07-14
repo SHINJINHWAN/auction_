@@ -285,3 +285,33 @@ DELIMITER ;
 SELECT '🎉 Auction Database Schema Created Successfully!' as message;
 SELECT COUNT(*) as total_auctions FROM auction;
 SELECT COUNT(*) as total_bids FROM bids; 
+
+-- User 테이블 업데이트 (이메일 인증, Refresh Token, 로그인 이력 추가)
+ALTER TABLE users 
+ADD COLUMN email_verified BOOLEAN DEFAULT FALSE,
+ADD COLUMN email_verification_token VARCHAR(255),
+ADD COLUMN email_verification_expiry DATETIME,
+ADD COLUMN refresh_token TEXT,
+ADD COLUMN refresh_token_expiry DATETIME,
+ADD COLUMN last_login_at DATETIME,
+ADD COLUMN last_login_ip VARCHAR(45);
+
+-- 로그인 이력 테이블
+CREATE TABLE login_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    login_at DATETIME NOT NULL,
+    login_ip VARCHAR(45),
+    user_agent TEXT,
+    status VARCHAR(20) NOT NULL, -- SUCCESS, FAILED
+    failure_reason TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 인덱스 추가
+CREATE INDEX idx_login_history_user_id ON login_history(user_id);
+CREATE INDEX idx_login_history_login_at ON login_history(login_at);
+CREATE INDEX idx_login_history_status ON login_history(status);
+CREATE INDEX idx_users_email_verification_token ON users(email_verification_token);
+CREATE INDEX idx_users_refresh_token ON users(refresh_token); 

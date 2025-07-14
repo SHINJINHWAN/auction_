@@ -43,7 +43,31 @@ public class User {
     private Boolean isActive = true;
 
     @Column(nullable = false)
-    private String role = "USER";
+    private String role = "USER"; // USER, ADMIN
+
+    // 🔐 이메일 인증 관련
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
+
+    @Column(nullable = true)
+    private String emailVerificationToken;
+
+    @Column(nullable = true)
+    private LocalDateTime emailVerificationExpiry;
+
+    // 🔄 Refresh Token 관련
+    @Column(nullable = true, columnDefinition = "TEXT")
+    private String refreshToken;
+
+    @Column(nullable = true)
+    private LocalDateTime refreshTokenExpiry;
+
+    // 📊 로그인 이력 관련
+    @Column(nullable = true)
+    private LocalDateTime lastLoginAt;
+
+    @Column(nullable = true)
+    private String lastLoginIp;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -64,6 +88,7 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
+    // 기존 getter/setter
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -88,4 +113,24 @@ public class User {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // 🔐 이메일 인증 관련 getter/setter
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
+    public String getEmailVerificationToken() { return emailVerificationToken; }
+    public void setEmailVerificationToken(String emailVerificationToken) { this.emailVerificationToken = emailVerificationToken; }
+    public LocalDateTime getEmailVerificationExpiry() { return emailVerificationExpiry; }
+    public void setEmailVerificationExpiry(LocalDateTime emailVerificationExpiry) { this.emailVerificationExpiry = emailVerificationExpiry; }
+
+    // 🔄 Refresh Token 관련 getter/setter
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    public LocalDateTime getRefreshTokenExpiry() { return refreshTokenExpiry; }
+    public void setRefreshTokenExpiry(LocalDateTime refreshTokenExpiry) { this.refreshTokenExpiry = refreshTokenExpiry; }
+
+    // 📊 로그인 이력 관련 getter/setter
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
+    public String getLastLoginIp() { return lastLoginIp; }
+    public void setLastLoginIp(String lastLoginIp) { this.lastLoginIp = lastLoginIp; }
 } 

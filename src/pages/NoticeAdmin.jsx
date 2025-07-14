@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import axios from '../axiosConfig';
 import '../style/NoticeAdmin.css';
 
 const NoticeAdmin = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const navigate = useNavigate();
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ const NoticeAdmin = () => {
       setError(null);
       console.log('🚀 공지사항 관리자 데이터 로드 시작');
       
-      const response = await axios.get('/notice/admin');
+      const response = await axios.get('/api/notice/admin');
       console.log('✅ 공지사항 관리자 API 응답:', response.data);
       const apiNotices = response.data;
       
@@ -140,7 +140,7 @@ const NoticeAdmin = () => {
     if (selectedNotice) {
       try {
         console.log('🗑️ 공지사항 삭제 시작:', selectedNotice.id);
-        await axios.delete(`/notice/admin/${selectedNotice.id}`);
+        await axios.delete(`/api/notice/admin/${selectedNotice.id}`);
         console.log('✅ 공지사항 삭제 완료');
         
         // 목록 새로고침
@@ -176,7 +176,7 @@ const NoticeAdmin = () => {
           status: formData.status || 'published'
         };
         
-        await axios.put('/notice/admin', updateData);
+        await axios.put('/api/notice/admin', updateData);
         console.log('✅ 공지사항 수정 완료');
         alert('공지사항이 성공적으로 수정되었습니다.');
       } else {
@@ -188,7 +188,7 @@ const NoticeAdmin = () => {
           author: formData.author || '관리자'
         };
         
-        await axios.post('/notice/admin', createData);
+        await axios.post('/api/notice/admin', createData);
         console.log('✅ 공지사항 생성 완료');
         alert('공지사항이 성공적으로 생성되었습니다.');
       }

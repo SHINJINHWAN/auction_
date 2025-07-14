@@ -1,9 +1,9 @@
-import React, { useContext } from 'react';
-import { UserContext } from '../UserContext';
+import React from 'react';
+import { useUser } from '../UserContext';
 import { useNavigate } from 'react-router-dom';
 
 const MyPage = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const navigate = useNavigate();
 
   if (!user) {

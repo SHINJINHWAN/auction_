@@ -1,7 +1,5 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { UserContext } from "../UserContext";
 import "../style/Login.css";
 
 const Login = () => {
@@ -13,7 +11,6 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -25,34 +22,37 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     try {
-      // 실제 백엔드 API 호출
-      const response = await axios.post("/auth/login", {
-        usernameOrEmail: form.usernameOrEmail,
-        password: form.password
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          usernameOrEmail: form.usernameOrEmail,
+          password: form.password,
+        }),
       });
-      
-      const { token, user } = response.data;
-      
-      // JWT 토큰 저장
-      localStorage.setItem("jwt", token);
-      setUser(user);
-      
-      // 관리자인 경우 관리자 페이지로, 일반 사용자는 홈으로
-      if (user.role === "ADMIN") {
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || "로그인 실패");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("로그인 성공:", data);
+
+      if (data.role === "ADMIN") {
         navigate("/notice/admin");
       } else {
         navigate("/");
       }
-      
+
     } catch (err) {
       console.error("로그인 실패:", err);
-      if (err.response?.status === 401) {
-        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
-      } else {
-        setError("로그인에 실패했습니다. 다시 시도해주세요.");
-      }
+      setError("로그인에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +63,6 @@ const Login = () => {
       setError("관리자는 소셜 로그인을 사용할 수 없습니다.");
       return;
     }
-    // 소셜 로그인 처리
     setError(`${provider} 로그인은 준비 중입니다.`);
   };
 
@@ -78,7 +77,6 @@ const Login = () => {
   return (
     <div className="login-page">
       <div className="login-container">
-        {/* 왼쪽 배경 */}
         <div className="login-background">
           <div className="background-content">
             <h1>경매 플랫폼에 오신 것을 환영합니다</h1>
@@ -100,13 +98,12 @@ const Login = () => {
           </div>
         </div>
 
-        {/* 오른쪽 로그인 폼 */}
         <div className="login-form-container" style={{ width: '100%', maxWidth: 400, margin: '0 auto', padding: 32, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
           <div className="login-header">
             <h2>로그인</h2>
             <p>아이디와 비밀번호를 입력해 주세요.</p>
           </div>
-          {/* 사용자 타입 선택 */}
+
           <div className="user-type-selector" style={{ marginBottom: 16 }}>
             <button
               className={`type-btn ${userType === "user" ? "active" : ""}`}
@@ -123,6 +120,7 @@ const Login = () => {
               🔧 관리자
             </button>
           </div>
+
           <form onSubmit={handleSubmit} className="login-form">
             <div className="input-group">
               <label htmlFor="usernameOrEmail">
@@ -157,6 +155,7 @@ const Login = () => {
                 {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
+
             <button
               type="submit"
               className={`login-btn ${userType === "admin" ? "admin" : ""} ${isLoading ? "loading" : ""}`}
@@ -166,11 +165,13 @@ const Login = () => {
               {isLoading ? "로그인 중..." : userType === "admin" ? "관리자 로그인" : "로그인"}
             </button>
           </form>
+
           {error && (
             <div className="error-message" style={{ marginTop: 12 }}>
               ⚠️ {error}
             </div>
           )}
+
           <div className="auth-links" style={{ marginTop: 16 }}>
             <p>
               계정이 없으신가요?{' '}
@@ -183,4 +184,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

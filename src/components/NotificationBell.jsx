@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
-import { UserContext } from '../UserContext';
+import { useUser } from '../UserContext';
 import './NotificationBell.css';
 import { FaBell } from 'react-icons/fa';
 
 const NotificationBell = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const bellRef = useRef();

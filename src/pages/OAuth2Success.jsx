@@ -1,24 +1,24 @@
-import { useEffect, useContext } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { UserContext } from "../UserContext";
+import { useUser } from "../UserContext";
 import axios from "axios";
 
 const OAuth2Success = () => {
   const [params] = useSearchParams();
-  const { setUser } = useContext(UserContext);
+  const { user, login } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = params.get("token");
     if (token) {
-      localStorage.setItem("jwt", token);
+      localStorage.setItem("accessToken", token);
       axios.get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
         .then(res => {
-          setUser(res.data);
+          // UserContext의 login 함수를 사용하여 사용자 정보 설정
           navigate("/");
         });
     }
-  }, [params, setUser, navigate]);
+  }, [params, navigate]);
 
   return <div>로그인 중...</div>;
 };
