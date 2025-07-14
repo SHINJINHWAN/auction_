@@ -1,6 +1,18 @@
--- 샘플 경매 데이터 삽입 (현재 스키마에 맞게 수정)
+-- 샘플 사용자 데이터 삽입
 USE auctiondb;
 
+-- 기존 사용자 데이터 삭제 (선택사항)
+-- DELETE FROM user;
+
+-- 샘플 사용자 데이터 삽입 (BCrypt로 암호화된 비밀번호)
+-- 비밀번호: 1234 (BCrypt 해시)
+INSERT INTO user (username, email, password, role, email_verified, created_at, last_login, last_login_ip) VALUES
+('user1', 'user1@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'USER', 1, NOW(), NULL, NULL),
+('user2', 'user2@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'USER', 1, NOW(), NULL, NULL),
+('admin', 'admin@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'ADMIN', 1, NOW(), NULL, NULL),
+('testuser', 'test@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'USER', 1, NOW(), NULL, NULL);
+
+-- 샘플 경매 데이터 삽입 (현재 스키마에 맞게 수정)
 -- 기존 데이터 삭제 (선택사항)
 -- DELETE FROM auction;
 

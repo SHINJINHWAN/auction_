@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +29,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UserService userService;
@@ -39,40 +42,47 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        logger.info("테스트 엔드포인트 호출됨");
+        return ResponseEntity.ok(Map.of("message", "AuthController 정상 작동"));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> req, HttpServletRequest request) {
         String username = req.get("username");
         String password = req.get("password");
         
-        UserDto user = userService.findByUsernameDto(username);
-        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
-            // 로그인 실패 기록
-            loginHistoryService.recordLoginAttempt(username, request.getRemoteAddr(), 
-                request.getHeader("User-Agent"), "FAILED", "Invalid credentials");
-            return ResponseEntity.status(401).body(Map.of("error", "아이디 또는 비밀번호가 올바르지 않습니다."));
-        }
-
-        if (!user.getEmailVerified()) {
-            return ResponseEntity.status(401).body(Map.of("error", "이메일 인증이 필요합니다."));
-        }
-
-        // 로그인 성공 기록
-        loginHistoryService.recordLoginAttempt(username, request.getRemoteAddr(), 
-            request.getHeader("User-Agent"), "SUCCESS", null);
+        logger.info("로그인 시도: username={}", username);
         
-        // 마지막 로그인 시간 업데이트
-        userService.updateLastLogin(user.getId(), request.getRemoteAddr());
+        UserDto user = userService.findByUsernameDto(username);
+        if (user == null) {
+            logger.warn("사용자를 찾을 수 없음: username={}", username);
+            return ResponseEntity.status(401).body(Map.of("message", "아이디 또는 비밀번호가 올바르지 않습니다."));
+        }
 
+        logger.info("사용자 찾음: username={}, role={}", username, user.getRole());
+
+        // 평문 비밀번호 비교
+        if (!password.equals(user.getPassword())) {
+            logger.warn("비밀번호 불일치: username={}", username);
+            return ResponseEntity.status(401).body(Map.of("message", "아이디 또는 비밀번호가 올바르지 않습니다."));
+        }
+
+        logger.info("로그인 성공: username={}", username);
+
+        // JWT 토큰 생성
         String accessToken = jwtUtil.generateAccessToken(username, List.of(user.getRole()));
         String refreshToken = jwtUtil.generateRefreshToken(username);
         
         // Refresh Token 저장
         userService.updateRefreshToken(user.getId(), refreshToken);
-
+        System.out.println("1");
         return ResponseEntity.ok(Map.of(
             "accessToken", accessToken,
             "refreshToken", refreshToken,
-            "user", user
+            "user", user,
+            "message", "로그인 성공"
         ));
     }
 
@@ -87,37 +97,30 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserDto userDto) {
         if (userService.findByUsernameDto(userDto.getUsername()) != null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "이미 존재하는 아이디입니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 존재하는 아이디입니다."));
         }
         if (userService.findByEmailDto(userDto.getEmail()) != null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "이미 존재하는 이메일입니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 존재하는 이메일입니다."));
         }
 
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        userDto.setEmailVerified(false);
+        // 평문 비밀번호로 저장
+        userDto.setPassword(userDto.getPassword());
+        userDto.setEmailVerified(true); // 이메일 인증 없이 바로 활성화
         userDto.setRole("USER");
         
-        // 이메일 인증 토큰 생성
-        String verificationToken = UUID.randomUUID().toString();
-        userDto.setEmailVerificationToken(verificationToken);
-        userDto.setEmailVerificationExpiry(LocalDateTime.now().plusHours(24));
-
         UserDto savedUser = userService.save(userDto);
-        
-        // 이메일 인증 메일 발송
-        emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
 
-        return ResponseEntity.ok(Map.of("message", "회원가입이 완료되었습니다. 이메일을 확인해주세요."));
+        return ResponseEntity.ok(Map.of("message", "회원가입이 완료되었습니다."));
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         UserDto user = userService.findByEmailVerificationToken(token);
         if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "유효하지 않은 인증 토큰입니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "유효하지 않은 인증 토큰입니다."));
         }
         if (user.getEmailVerificationExpiry().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "인증 토큰이 만료되었습니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "인증 토큰이 만료되었습니다."));
         }
 
         userService.verifyEmail(user.getId());
@@ -128,17 +131,17 @@ public class AuthController {
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> req) {
         String refreshToken = req.get("refreshToken");
         if (refreshToken == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Refresh token이 필요합니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "Refresh token이 필요합니다."));
         }
 
         if (!jwtUtil.validateToken(refreshToken)) {
-            return ResponseEntity.status(401).body(Map.of("error", "유효하지 않은 refresh token입니다."));
+            return ResponseEntity.status(401).body(Map.of("message", "유효하지 않은 refresh token입니다."));
         }
 
         String username = jwtUtil.getUsername(refreshToken);
         UserDto user = userService.findByUsernameDto(username);
         if (user == null || !refreshToken.equals(user.getRefreshToken())) {
-            return ResponseEntity.status(401).body(Map.of("error", "유효하지 않은 refresh token입니다."));
+            return ResponseEntity.status(401).body(Map.of("message", "유효하지 않은 refresh token입니다."));
         }
 
         String newAccessToken = jwtUtil.generateAccessToken(username, List.of(user.getRole()));
@@ -158,10 +161,10 @@ public class AuthController {
         String email = req.get("email");
         UserDto user = userService.findByEmailDto(email);
         if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "존재하지 않는 이메일입니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "존재하지 않는 이메일입니다."));
         }
         if (user.getEmailVerified()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "이미 인증된 이메일입니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 인증된 이메일입니다."));
         }
 
         String verificationToken = UUID.randomUUID().toString();

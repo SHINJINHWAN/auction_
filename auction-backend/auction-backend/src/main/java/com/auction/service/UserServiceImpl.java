@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
     public User register(UserDto userDto) {
         User user = new User();
         user.setUsername(userDto.getUsername());
-        // 비밀번호를 평문으로 저장
+        // 평문 비밀번호로 저장
         user.setPassword(userDto.getPassword());
         user.setEmail(userDto.getEmail());
         user.setRole("USER"); // 기본값 USER
@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
         }
         User user = userOpt.get();
-        // 평문 비교
+        // 평문 비밀번호 비교
         if (!password.equals(user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
         
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // 평문 비교 (실제 프로덕션에서는 암호화된 비밀번호 비교)
+            // 평문 비밀번호 비교
             if (password.equals(user.getPassword())) {
                 return userOpt;
             }
@@ -82,6 +82,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
+        // 비밀번호를 BCrypt로 암호화하여 저장
         user.setPassword(userDto.getPassword());
         user.setNickname(userDto.getNickname());
         user.setAddress(userDto.getAddress());

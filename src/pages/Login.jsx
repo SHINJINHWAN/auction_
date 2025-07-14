@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../style/Login.css";
+import { useUser } from "../UserContext";
 
 const Login = () => {
   const [form, setForm] = useState({ 
@@ -8,51 +9,42 @@ const Login = () => {
     password: "" 
   });
   const [userType, setUserType] = useState("user");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login, error, clearError } = useUser();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    if (error) setError(""); // 입력 시 에러 메시지 제거
+    if (error) clearError(); // 입력 시 에러 메시지 제거
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usernameOrEmail: form.usernameOrEmail,
-          password: form.password,
-        }),
+      console.log("로그인 시도:", { username: form.usernameOrEmail, password: form.password });
+      
+      const result = await login({
+        username: form.usernameOrEmail,
+        password: form.password,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || "로그인 실패");
-        return;
-      }
-
-      const data = await response.json();
-      console.log("로그인 성공:", data);
-
-      if (data.role === "ADMIN") {
-        navigate("/notice/admin");
+      if (result.success) {
+        console.log("로그인 성공:", result.data);
+        
+        if (result.data.user && result.data.user.role === "ADMIN") {
+          navigate("/notice/admin");
+        } else {
+          navigate("/");
+        }
       } else {
-        navigate("/");
+        console.error("로그인 실패:", result.error);
       }
 
     } catch (err) {
-      console.error("로그인 실패:", err);
-      setError("로그인에 실패했습니다. 다시 시도해주세요.");
+      console.error("로그인 요청 실패:", err);
     } finally {
       setIsLoading(false);
     }

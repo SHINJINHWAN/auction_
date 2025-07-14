@@ -1,6 +1,7 @@
 package com.auction.util;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +34,18 @@ public class JwtUtil {
 
     @Value("${jwt.refresh-token.expiration}")
     private long refreshTokenExpiration;
+
+    @PostConstruct
+    public void init() {
+        // secretKey가 Base64로 인코딩되지 않은 경우 자동 변환
+        try {
+            // Base64 디코딩 시도
+            Base64.getDecoder().decode(secretKey);
+        } catch (IllegalArgumentException e) {
+            // Base64가 아니면 인코딩
+            this.secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
+        }
+    }
 
     public String generateAccessToken(String username, List<String> roles) {
         return Jwts.builder()
@@ -87,18 +101,34 @@ public class JwtUtil {
         }
     }
 
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        return null;
+    }
+
     public OncePerRequestFilter jwtAuthenticationFilter() {
         return new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                     throws ServletException, IOException {
-                String header = request.getHeader("Authorization");
-                if (header != null && header.startsWith("Bearer ")) {
-                    String token = header.substring(7);
-                    if (validateToken(token)) {
-                        Authentication auth = getAuthentication(token);
-                        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
-                    }
+                
+                String path = request.getRequestURI();
+                
+                // /api/auth/** 경로는 JWT 검증 없이 통과
+                if (path.startsWith("/api/auth")) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
+                String token = resolveToken(request);
+                if (token != null && validateToken(token)) {
+                    Authentication auth = getAuthentication(token);
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
                 }
                 filterChain.doFilter(request, response);
             }
